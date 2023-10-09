@@ -12,8 +12,10 @@ import { SaveShippingDetailsDto } from './dtos/save-shipping-details.dto';
 import { CartService } from './cart.service';
 import { defaultCart } from './cart.schema';
 import { SavePaymentMethodDto } from './dtos/save-payment-method.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('cart')
+@ApiTags('Cart')
 export class CartController {
   constructor(private cartService: CartService) { }
 

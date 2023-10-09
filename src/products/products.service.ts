@@ -72,9 +72,7 @@ export class ProductsService {
 
   async createSample(createProducts, file: Express.Multer.File, path) {
     if (file.mimetype.match('image')) {
-      const createdProduct = await this.productModel.create({
-        ...createProducts,
-      });
+      const createdProduct = await this.productModel.create(createProducts);
       const fileName = `products/product${createdProduct._id}/${Date.now()}-${file.originalname}`;
       if (
         !fs.existsSync(`./src/filesUpload/products/product${createdProduct._id}`)
@@ -102,7 +100,6 @@ export class ProductsService {
   ) {
     let { name, price, description, image, brand, category, countInStock, url } =
       attrs;
-    url = '1696778923946-landscape-photography_1645.jpg'
     if (!Types.ObjectId.isValid(id))
       throw new BadRequestException('Invalid product ID.');
 

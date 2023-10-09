@@ -6,8 +6,10 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/guards/role.guard';
 import { UserRole } from 'src/users/user.schema';
 import { Roles } from 'src/decorators/roles.decorator';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('categories')
+@ApiTags('Category')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) { }
 

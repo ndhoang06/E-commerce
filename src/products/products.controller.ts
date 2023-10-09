@@ -20,8 +20,12 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/guards/role.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { UserRole } from 'src/users/user.schema';
+import { ProductDto } from './product.dto';
+import { ReviewDto } from './review.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('products')
+@ApiTags('Products')
 export class ProductsController {
   constructor(private productsService: ProductsService) { }
 
@@ -55,7 +59,7 @@ export class ProductsController {
   @Roles(UserRole.ADMIN)
   @Post()
   @UseInterceptors(FileInterceptor('image'))
-  async createProduct(@Body() createProducts, @UploadedFile() file: Express.Multer.File) {
+  async createProduct(@Body() createProducts: ProductDto, @UploadedFile() file: Express.Multer.File) {
     const product = await this.productsService.createSample(createProducts, file, path);
     return product
   }
@@ -66,7 +70,7 @@ export class ProductsController {
   @UseInterceptors(FileInterceptor('image'))
   updateProduct(
     @Param('id') id: string,
-    @Body() product,
+    @Body() product: ProductDto,
     @UploadedFile() file: Express.Multer.File) {
     return this.productsService.update(id, product, file, path);
   }
@@ -75,7 +79,7 @@ export class ProductsController {
   @Put(':id/review')
   createReview(
     @Param('id') id: string,
-    @Body() body,
+    @Body() body: ReviewDto,
     @Req() req
   ) {
     const user = req.user

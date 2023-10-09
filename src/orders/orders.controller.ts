@@ -13,8 +13,10 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/guards/role.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { UserRole } from 'src/users/user.schema';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('orders')
+@ApiTags('Order')
 export class OrdersController {
   constructor(private ordersService: OrdersService) { }
 

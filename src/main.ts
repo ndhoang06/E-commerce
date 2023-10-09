@@ -5,6 +5,7 @@ import { ValidationPipe } from '@nestjs/common';
 import * as session from 'express-session';
 import { corsConfig, sessionConfig } from './utils/config';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 const MongoDBStore = require('connect-mongodb-session')(session);
 
@@ -20,6 +21,16 @@ async function bootstrap() {
       saveUninitialized: false,
     })
   )
+  const config = new DocumentBuilder()
+    .setTitle("Example")
+    .setDescription(" Example")
+    .setVersion('1.0')
+    .addTag('Example')
+    .build()
+
+  const document = SwaggerModule.createDocument(app, config)
+  SwaggerModule.setup('swagger', app, document)
+
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   await app.listen(process.env.PORT || 3000, () => {
     console.log('connect oke')
