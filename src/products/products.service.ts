@@ -8,10 +8,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { PaginatedProducts } from 'src/interfaces';
-import { UserDocument } from 'src/users/user.schema';
-import { sampleProduct } from '../utils/data/product';
 import { Product, ProductDocument } from './product.schema';
-import { ProductDto } from './product.dto';
 import * as fs from 'fs';
 
 @Injectable()
@@ -31,13 +28,17 @@ export class ProductsService {
     return products;
   }
 
-  async findMany(
-    keyword?: string,
-    pageId?: number,
-    pageSize?: number
-  ): Promise<PaginatedProducts> {
-    const size = 20;
-    const page = pageId || 1;
+  async findByCategory(categoryId) {
+    const products = await this.productModel.find({
+      $expr: { $eq: ['$category', { $toObjectId: categoryId }] }
+    })
+    return products;
+  }
+
+  async findMany(query): Promise<PaginatedProducts> {
+    const keyword = query.keyword || "";
+    const size = query.size || 10;
+    const page = query.page || 1;
 
     const rgex = keyword ? { name: { $regex: keyword, $options: 'i' } } : {};
 
@@ -48,7 +49,7 @@ export class ProductsService {
       .skip(size * (page - 1));
 
     if (!products.length) throw new NotFoundException('No products found.');
-    return { products, page, pages: Math.ceil(count / pageSize) };
+    return { products, page, pages: Math.ceil(count / size) };
   }
 
   async findById(id: string): Promise<ProductDocument> {

@@ -1,6 +1,16 @@
 import { IsString, IsNumber } from 'class-validator';
 import { Categories } from 'src/categories/categories.schema';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+
+export class optionsProduct {
+  @ApiPropertyOptional()
+  keyword: string;
+  @ApiPropertyOptional()
+  size: number;
+  @ApiPropertyOptional()
+  page: number;
+}
+
 export class ProductDto {
   @ApiPropertyOptional()
   @IsString()

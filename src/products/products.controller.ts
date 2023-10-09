@@ -20,7 +20,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/guards/role.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { UserRole } from 'src/users/user.schema';
-import { ProductDto } from './product.dto';
+import { ProductDto, optionsProduct } from './product.dto';
 import { ReviewDto } from './review.dto';
 import { ApiTags } from '@nestjs/swagger';
 
@@ -31,16 +31,19 @@ export class ProductsController {
 
   @Get()
   getProducts(
-    @Query('keyword') keyword: string,
-    @Query('pageId') pageId: number,
-    @Query('pageSize') pageSize: number
+    @Query() query: optionsProduct
   ) {
-    return this.productsService.findMany(keyword, pageId, pageSize);
+    return this.productsService.findMany(query);
   }
 
   @Get('topRated')
   getTopRatedProducts() {
     return this.productsService.findTopRated();
+  }
+
+  @Get('category/:id')
+  async productsCategory(@Param('id') id: string) {
+    return this.productsService.findByCategory(id);
   }
 
   @Get(':id')

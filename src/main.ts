@@ -12,7 +12,11 @@ const MongoDBStore = require('connect-mongodb-session')(session);
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   // app.set('trust proxy', 1); // trust first proxy
-  app.enableCors(corsConfig());
+  app.enableCors({
+    origin: ['http://localhost:8080'],
+    methods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true,
+  });
   // app.use(session(sessionConfig(MongoDBStore)));
   app.use(
     session({
