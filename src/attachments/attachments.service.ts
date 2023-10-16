@@ -45,6 +45,19 @@ export class AttachmentsService {
       updateData = url;
     }
 
+    const product = await this.attachmentRepository.createQueryBuilder('product')
+      .where('product.products =:id', { id })
+      .select('product.url')
+      .getMany()
+
+    const different = product.filter(item => {
+      return !updateData.includes(item.url)
+    })
+
+    different.map(async item => {
+      await this.cloudinaryService.deleteFile(item.url)
+    })
+
     await this.attachmentRepository.createQueryBuilder()
       .delete()
       .where('products =:id', { id })

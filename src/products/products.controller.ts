@@ -66,8 +66,8 @@ export class ProductsController {
     return this.productsService.deleteOne(id);
   }
 
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Roles(UserRole.ADMIN)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Post()
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'image', maxCount: 1 },
@@ -80,8 +80,8 @@ export class ProductsController {
     return product
   }
 
-  // @UseGuards(AuthGuard, RolesGuard)
-  // @Roles(UserRole.ADMIN)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Put(':id')
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'image', maxCount: 1 },
@@ -92,7 +92,7 @@ export class ProductsController {
     @Body() product: ProductDto,
     @UploadedFiles() files: { image?: Express.Multer.File, attachments?: Express.Multer.File[] }
   ) {
-    return this.productsService.update(id, product, files.image, files.attachments, path);
+    return this.productsService.update(id, product, files.image, files.attachments);
   }
 
   @UseGuards(AuthGuard)

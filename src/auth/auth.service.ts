@@ -13,7 +13,7 @@ export class AuthService {
       return 'No User from google';
     } else {
       const user = await this.userService.createUser(googleId);
-      const data = { ...googleId, userRole: user.role, _id: user._id };
+      const data = { ...googleId, userRole: user.role, id: user.id };
       const payload = await this.createJWT(data);
       console.log(payload)
       return {
@@ -29,7 +29,7 @@ export class AuthService {
       picture: payload.picture,
       email: payload.email,
       role: payload.userRole,
-      _id: payload._id
+      id: payload.id
     };
     return this.jwtService.sign(data);
   }

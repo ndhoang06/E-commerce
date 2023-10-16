@@ -1,12 +1,9 @@
 import {
   BadRequestException,
-  HttpException,
-  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { ProductDocument } from './product.schema';
-import * as fs from 'fs';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import ProductEntity, { Review } from './product.entity';
@@ -65,7 +62,7 @@ export class ProductsService {
   async findById(id: string) {
     const product = await this.productModel.find(
       {
-        where: { id },
+        where: { id: id },
         relations: {
           category: true,
           trademark: true,
@@ -73,7 +70,6 @@ export class ProductsService {
         }
       }
     );
-
     if (!product) throw new NotFoundException('No product with given ID.');
 
     return product;
@@ -90,7 +86,6 @@ export class ProductsService {
   async createSample(createProducts, image: Express.Multer.File, path, attachment: Express.Multer.File[]) {
     if (image[0].mimetype.match('image')) {
       const url_image = await this.cloudinaryService.uploadFile(image[0])
-      console.log(typeof url_image)
       const product = new ProductEntity()
       product.name = createProducts.name;
       product.price = createProducts.price;
@@ -102,24 +97,13 @@ export class ProductsService {
       product.trademark = createProducts.trademark;
 
       const createdProduct = await this.productModel.save(product);
-      attachment.map(async (attachment) => {
-        return await this.attachmentsService.create(attachment, createdProduct.id)
-      })
-      // const fileName = `products/product${createdProduct.id}/${Date.now()}-${file.originalname}`;
-      // if (
-      //   !fs.existsSync(`./src/filesUpload/products/product${createdProduct.id}`)
-      // ) {
-      //   fs.mkdirSync(`./src/filesUpload/products/product${createdProduct.id}`, {
-      //     recursive: true,
-      //   });
-      // }
-      // const filePath = path.join('./src/filesUpload', fileName);
-      // fs.writeFileSync(filePath, file.buffer);
-      // await this.productModel.createQueryBuilder()
-      //   .update(ProductEntity)
-      //   .set({ image: fileName })
-      //   .where('id=:id', { id: createdProduct.id })
-      //   .execute()
+      if (attachment.length < 1) {
+
+      } else {
+        attachment.map(async (attachment) => {
+          return await this.attachmentsService.create(attachment, createdProduct.id)
+        })
+      }
       return { createdProduct };
     } else {
       throw new BadRequestException('Invalid file type');
@@ -131,7 +115,6 @@ export class ProductsService {
     attrs,
     image: Express.Multer.File,
     attachment: Express.Multer.File[],
-    path
   ) {
     let { name, price, description, category, countInStock, trademark, urls } =
       attrs;
@@ -140,14 +123,10 @@ export class ProductsService {
 
     if (!product) throw new NotFoundException('No product with given ID.');
 
-    // fs.readdir(`./src/filesUpload/products/product${id}`, (err, files1) => {
-    //   if (err) {
-    //     console.log(err);
-    //     return;
-    //   }
-    //   fs.unlinkSync(`./src/filesUpload/products/product${id}/${url}`);
-    // });
-    console.log(attachment)
+    if (image == undefined) {
+      return 'Need a image main'
+    }
+
     if (image[0].mimetype.match('image')) {
       if (attachment == undefined || attachment.length < 1) {
 
@@ -161,6 +140,7 @@ export class ProductsService {
         }))
       }
       await this.attachmentsService.update(id, urls)
+      await this.cloudinaryService.deleteFile(product.image)
       const fileName = await this.cloudinaryService.uploadFile(image[0])
       product.name = name;
       product.price = price;
@@ -193,6 +173,8 @@ export class ProductsService {
     review.comment = body.comment;
     review.products = product;
     review.rating = body.rating;
+
+    await this.reviewModel.save(review)
   }
 
   async deleteOne(id: string): Promise<void> {

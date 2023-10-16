@@ -24,7 +24,7 @@ export class OrdersController {
   @Post()
   async createOrder(@Body() body: any, @Req() req) {
     const user = req.user
-    return this.ordersService.create(body, user._id);
+    return this.ordersService.create(body, user.id);
   }
 
   @UseGuards(AuthGuard)
@@ -38,7 +38,7 @@ export class OrdersController {
   @Get('myorders')
   async getUserOrders(@Req() req) {
     const user = req.user
-    return this.ordersService.findUserOrders(user._id);
+    return this.ordersService.findUserOrders(user.id);
   }
 
   @UseGuards(AuthGuard)

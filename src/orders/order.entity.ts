@@ -54,12 +54,12 @@ export class OrderEntity {
     @Column({ default: false })
     isPaid: boolean;
 
-    @Column({ nullable: false })
+    @Column({ nullable: true })
     paidAt: string;
 
     @Column({ default: false })
     isDelivered: boolean;
 
-    @Column({ nullable: false })
+    @Column({ nullable: true })
     deliveredAt: string;
 }
