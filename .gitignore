@@ -4,6 +4,7 @@
 seeds
 *.http
 
+src/filesUpload
 # dependencies
 dist
 node_modules

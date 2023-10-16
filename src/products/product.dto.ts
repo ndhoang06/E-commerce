@@ -1,14 +1,15 @@
 import { IsString, IsNumber } from 'class-validator';
 import { Categories } from 'src/categories/categories.schema';
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import TrademarkEntity from 'src/trademark/trademark.entity';
 
 export class optionsProduct {
   @ApiPropertyOptional()
-  keyword: string;
+  keyword?: string;
   @ApiPropertyOptional()
-  size: number;
+  size?: number;
   @ApiPropertyOptional()
-  page: number;
+  page?: number;
 }
 
 export class ProductDto {
@@ -24,9 +25,9 @@ export class ProductDto {
   @IsString()
   description: string;
 
-  @ApiPropertyOptional()
-  @IsString()
-  brand: string;
+  // @ApiPropertyOptional()
+  // @IsString()
+  // brand: string;
 
   @ApiPropertyOptional()
   @IsString()
@@ -35,4 +36,11 @@ export class ProductDto {
   @ApiPropertyOptional()
   @IsString()
   countInStock: string;
+
+  @ApiPropertyOptional()
+  @IsString()
+  trademark: TrademarkEntity;
+
+  @ApiPropertyOptional()
+  urls: string[];
 }

@@ -4,46 +4,57 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Categories, CategoriesDocument } from './categories.schema';
 import { Model } from 'mongoose';
+import { InjectRepository } from '@nestjs/typeorm';
+import CategoryEntity from './categories.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class CategoriesService {
   constructor(
-    @InjectModel(Categories.name) private categoriesModel: Model<CategoriesDocument>
-  ) {}
+    @InjectRepository(CategoryEntity)
+    private readonly categoriesModel: Repository<CategoryEntity>
+  ) { }
 
   async create(createCategoryDto: CreateCategoryDto) {
-    const checkCategories = await this.categoriesModel.findOne({name:createCategoryDto.name});
-    if(!checkCategories){
-      return await this.categoriesModel.create(createCategoryDto);
+    const checkCategories = await this.categoriesModel.findOneBy({ name: createCategoryDto.name });
+    if (!checkCategories) {
+      return await this.categoriesModel.save(createCategoryDto);
     }
-    throw new HttpException(`Danh mục ${checkCategories.name} đã tồn tại`,HttpStatus.BAD_REQUEST)
+    throw new HttpException(`Danh mục ${checkCategories.name} đã tồn tại`, HttpStatus.BAD_REQUEST)
   }
 
   async findAll() {
     return await this.categoriesModel.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} category`;
+  async findOne(id: string) {
+    return await this.categoriesModel.find({
+      where: {
+        id: id,
+      },
+      relations: {
+        products: true
+      }
+    });
   }
 
-  async update(id: number, updateCategoryDto: UpdateCategoryDto) {
-    const checkCategories = await this.categoriesModel.findOne({_id:id});
-    if(!checkCategories){
-      throw new HttpException(`Danh mục ${updateCategoryDto.name} không tồn tại`,HttpStatus.NOT_FOUND)
-    }else {
-      return await this.categoriesModel.updateOne({id:id},{
-        name:updateCategoryDto.name
+  async update(id: string, updateCategoryDto: UpdateCategoryDto) {
+    const checkCategories = await this.categoriesModel.findOneBy({ id: id });
+    if (!checkCategories) {
+      throw new HttpException(`Danh mục ${updateCategoryDto.name} không tồn tại`, HttpStatus.NOT_FOUND)
+    } else {
+      return await this.categoriesModel.update(id, {
+        name: updateCategoryDto.name
       })
     }
   }
 
-  async remove(id: number) {
-    const checkCategories = await this.categoriesModel.findOne({_id:id});
-    if(!checkCategories){
-      throw new HttpException(`Danh mục không tồn tại`,HttpStatus.NOT_FOUND)
-    }else {
-      return await this.categoriesModel.deleteOne({id:id})
+  async remove(id: string) {
+    const checkCategories = await this.categoriesModel.findOneBy({ id: id });
+    if (!checkCategories) {
+      throw new HttpException(`Danh mục không tồn tại`, HttpStatus.NOT_FOUND)
+    } else {
+      return await this.categoriesModel.delete(id)
     }
   }
 }

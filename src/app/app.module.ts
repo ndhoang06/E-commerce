@@ -15,6 +15,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { CategoriesModule } from 'src/categories/categories.module';
 import { PublicModule } from 'src/public/public.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { TrademarkModule } from 'src/trademark/trademark.module';
+import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
+import { AttachmentsModule } from 'src/attachments/attachments.module';
 
 @Module({
   imports: [
@@ -22,10 +25,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       isGlobal: true,
       envFilePath: ['.env'],
     }),
-    MongooseModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: connectDB,
-    }),
+    // MongooseModule.forRootAsync({
+    //   inject: [ConfigService],
+    //   useFactory: connectDB,
+    // }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -39,19 +42,22 @@ import { TypeOrmModule } from '@nestjs/typeorm';
           database: configService.get('POSTGRES_DB'),
           entities: [__dirname + '/**/*.entity.ts'],
           migrations: [__dirname + '/migrations/*.ts'],
-          synchronize: false,
+          synchronize: true,
           autoLoadEntities: true,
         };
       },
     }),
+    CloudinaryModule,
     CommandModule,
+    AttachmentsModule,
     ProductsModule,
     UsersModule,
     CartModule,
     OrderModule,
     AuthModule,
     CategoriesModule,
-    PublicModule
+    PublicModule,
+    TrademarkModule,
     // SeedsModule,
   ],
   controllers: [AppController],

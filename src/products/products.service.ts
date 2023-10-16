@@ -5,23 +5,34 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { PaginatedProducts } from 'src/interfaces';
-import { Product, ProductDocument } from './product.schema';
+import { ProductDocument } from './product.schema';
 import * as fs from 'fs';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import ProductEntity, { Review } from './product.entity';
+import UserEntity from 'src/users/user.entity';
+import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
+import { AttachmentsService } from 'src/attachments/attachments.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
-    @InjectModel(Product.name) private productModel: Model<ProductDocument>
+    private readonly attachmentsService: AttachmentsService,
+    private readonly cloudinaryService: CloudinaryService,
+    @InjectRepository(ProductEntity)
+    private readonly productModel: Repository<ProductEntity>,
+    @InjectRepository(Review)
+    private readonly reviewModel: Repository<Review>,
+    @InjectRepository(UserEntity)
+    private readonly userModel: Repository<UserEntity>,
   ) { }
 
-  async findTopRated(): Promise<ProductDocument[]> {
+  async findTopRated() {
     const products = await this.productModel
-      .find({})
-      .sort({ rating: -1 })
-      .limit(3);
+      .createQueryBuilder()
+      .orderBy("rating", "DESC")
+      .take(3)
+      .getMany();
 
     if (!products.length) throw new NotFoundException('No products found.');
 
@@ -29,34 +40,39 @@ export class ProductsService {
   }
 
   async findByCategory(categoryId) {
-    const products = await this.productModel.find({
-      $expr: { $eq: ['$category', { $toObjectId: categoryId }] }
-    })
+    const products = await this.productModel.createQueryBuilder('product')
+      .where('product.category = :categoryId', { categoryId: categoryId })
+      .getMany();
     return products;
   }
 
-  async findMany(query): Promise<PaginatedProducts> {
-    const keyword = query.keyword || "";
-    const size = query.size || 10;
-    const page = query.page || 1;
-
-    const rgex = keyword ? { name: { $regex: keyword, $options: 'i' } } : {};
-
-    const count = await this.productModel.countDocuments({ ...rgex });
+  async findMany(req, queryOptions) {
+    console.log(queryOptions)
+    const keyword = req.query.keyword || "";
+    const size = req.query.size || 10;
+    const page = req.query.page || 1;
     const products = await this.productModel
-      .find({ ...rgex })
-      .limit(size)
-      .skip(size * (page - 1));
+      .createQueryBuilder('products')
+      .where('products.name LIKE :keyword', { keyword: `%${keyword}%` })
+      .take(size)
+      .skip(size * (page - 1))
+      .getManyAndCount()
 
-    if (!products.length) throw new NotFoundException('No products found.');
-    return { products, page, pages: Math.ceil(count / size) };
+    if (products.length < 1) throw new NotFoundException('No products found.');
+    return products
   }
 
-  async findById(id: string): Promise<ProductDocument> {
-    if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid product ID.');
-
-    const product = await this.productModel.findById(id);
+  async findById(id: string) {
+    const product = await this.productModel.find(
+      {
+        where: { id },
+        relations: {
+          category: true,
+          trademark: true,
+          reviews: true
+        }
+      }
+    );
 
     if (!product) throw new NotFoundException('No product with given ID.');
 
@@ -65,28 +81,45 @@ export class ProductsService {
 
   async createMany(
     products: Partial<ProductDocument>[]
-  ): Promise<ProductDocument[]> {
-    const createdProducts = await this.productModel.insertMany(products);
+  ) {
+    const createdProducts = await this.productModel.save(products);
 
     return createdProducts;
   }
 
-  async createSample(createProducts, file: Express.Multer.File, path) {
-    if (file.mimetype.match('image')) {
-      const createdProduct = await this.productModel.create(createProducts);
-      const fileName = `products/product${createdProduct._id}/${Date.now()}-${file.originalname}`;
-      if (
-        !fs.existsSync(`./src/filesUpload/products/product${createdProduct._id}`)
-      ) {
-        fs.mkdirSync(`./src/filesUpload/products/product${createdProduct._id}`, {
-          recursive: true,
-        });
-      }
-      const filePath = path.join('./src/filesUpload', fileName);
-      fs.writeFileSync(filePath, file.buffer);
-      await this.productModel.updateOne({ _id: createdProduct._id }, {
-        image: fileName
+  async createSample(createProducts, image: Express.Multer.File, path, attachment: Express.Multer.File[]) {
+    if (image[0].mimetype.match('image')) {
+      const url_image = await this.cloudinaryService.uploadFile(image[0])
+      console.log(typeof url_image)
+      const product = new ProductEntity()
+      product.name = createProducts.name;
+      product.price = createProducts.price;
+      product.category = createProducts.category;
+      product.numReviews = createProducts.numReviews;
+      product.countInStock = createProducts.countInStock;
+      product.description = createProducts.description;
+      product.image = url_image;
+      product.trademark = createProducts.trademark;
+
+      const createdProduct = await this.productModel.save(product);
+      attachment.map(async (attachment) => {
+        return await this.attachmentsService.create(attachment, createdProduct.id)
       })
+      // const fileName = `products/product${createdProduct.id}/${Date.now()}-${file.originalname}`;
+      // if (
+      //   !fs.existsSync(`./src/filesUpload/products/product${createdProduct.id}`)
+      // ) {
+      //   fs.mkdirSync(`./src/filesUpload/products/product${createdProduct.id}`, {
+      //     recursive: true,
+      //   });
+      // }
+      // const filePath = path.join('./src/filesUpload', fileName);
+      // fs.writeFileSync(filePath, file.buffer);
+      // await this.productModel.createQueryBuilder()
+      //   .update(ProductEntity)
+      //   .set({ image: fileName })
+      //   .where('id=:id', { id: createdProduct.id })
+      //   .execute()
       return { createdProduct };
     } else {
       throw new BadRequestException('Invalid file type');
@@ -96,97 +129,81 @@ export class ProductsService {
   async update(
     id: string,
     attrs,
-    file: Express.Multer.File,
+    image: Express.Multer.File,
+    attachment: Express.Multer.File[],
     path
   ) {
-    let { name, price, description, image, brand, category, countInStock, url } =
+    let { name, price, description, category, countInStock, trademark, urls } =
       attrs;
-    if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid product ID.');
 
-    const product = await this.productModel.findById(id);
+    const product = await this.productModel.findOneBy({ id });
 
     if (!product) throw new NotFoundException('No product with given ID.');
 
-    fs.readdir(`./src/filesUpload/products/product${id}`, (err, files1) => {
-      if (err) {
-        console.log(err);
-        return;
+    // fs.readdir(`./src/filesUpload/products/product${id}`, (err, files1) => {
+    //   if (err) {
+    //     console.log(err);
+    //     return;
+    //   }
+    //   fs.unlinkSync(`./src/filesUpload/products/product${id}/${url}`);
+    // });
+    console.log(attachment)
+    if (image[0].mimetype.match('image')) {
+      if (attachment == undefined || attachment.length < 1) {
+
+      } else {
+        Promise.all(attachment.map(async attachments => {
+          if (attachments.mimetype.match('image')) {
+            return await this.attachmentsService.create(attachments, id)
+          } else {
+            return 'Please image'
+          }
+        }))
       }
-      fs.unlinkSync(`./src/filesUpload/products/product${id}/${url}`);
-    });
-    if (file.mimetype.match('image')) {
-      if (!fs.existsSync(`./src/filesUpload/products/product${id}`)) {
-        throw new HttpException(
-          'Not found product',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      var fileName = `products/product${id}/${Date.now()}-${file.originalname}`;
-      const filePath = path.join('./src/filesUpload', fileName);
-      fs.writeFileSync(filePath, file.buffer);
+      await this.attachmentsService.update(id, urls)
+      const fileName = await this.cloudinaryService.uploadFile(image[0])
+      product.name = name;
+      product.price = price;
+      product.description = description;
+      product.image = fileName;
+      product.trademark = trademark;
+      product.category = category;
+      product.countInStock = countInStock;
+      const updatedProduct = await this.productModel.save(product);
+      return updatedProduct;
+    } else {
+      return 'Please image'
     }
-    product.name = name;
-    product.price = price;
-    product.description = description;
-    product.image = fileName;
-    product.brand = brand;
-    product.category = category;
-    product.countInStock = countInStock;
-    const updatedProduct = await product.save();
-    return updatedProduct;
   }
 
   async createReview(
     id: string,
     user,
     body
-  ): Promise<ProductDocument> {
-    if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid product ID.');
+  ) {
 
-    const product = await this.productModel.findById(id);
+    const product = await this.productModel.findOneBy({ id });
 
     if (!product) throw new NotFoundException('No product with given ID.');
 
-    const alreadyReviewed = product.reviews.find(
-      r => r.user === user._id
-    );
+    const checkUser = await this.userModel.findOneBy({ id: user.id });
 
-    if (alreadyReviewed)
-      throw new BadRequestException('Product already reviewed!');
-
-    const review = {
-      name: user.firstName,
-      rating: body.rating,
-      comment: body.comment,
-      user: user._id,
-    };
-
-    product.reviews.push(review);
-
-    product.rating =
-      product.reviews.reduce((acc, item) => item.rating + acc, 0) /
-      product.reviews.length;
-
-    product.numReviews = product.reviews.length;
-
-    const updatedProduct = await product.save();
-
-    return updatedProduct;
+    const review = new Review()
+    review.user = checkUser;
+    review.comment = body.comment;
+    review.products = product;
+    review.rating = body.rating;
   }
 
   async deleteOne(id: string): Promise<void> {
-    if (!Types.ObjectId.isValid(id))
-      throw new BadRequestException('Invalid product ID.');
-    const product = await this.productModel.findById(id);
+    const product = await this.productModel.findOneBy({ id });
     if (!product) throw new NotFoundException('No product with given ID.');
 
-    fs.rmdirSync(`./src/filesUpload/products/product${id}`, { recursive: true });
-    await product.remove();
+    await this.productModel.delete(id);
+    await this.attachmentsService.remove(id)
   }
 
   async deleteMany(): Promise<void> {
-    await this.productModel.deleteMany({});
+    await this.productModel.delete({});
   }
 }

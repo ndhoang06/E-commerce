@@ -51,7 +51,7 @@ export class OrdersController {
   @UseGuards(AuthGuard)
   @Put(':id/pay')
   async updateOrderPayment(
-    @Param('id') id: string,
+    @Param('id') id: number,
     @Body() { paymentResult }: any
   ) {
     return this.ordersService.updatePaid(id, paymentResult);
@@ -61,7 +61,7 @@ export class OrdersController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Put(':id/deliver')
-  async updateOrderDelivery(@Param('id') id: string) {
+  async updateOrderDelivery(@Param('id') id: number) {
     return this.ordersService.updateDelivered(id);
   }
 }

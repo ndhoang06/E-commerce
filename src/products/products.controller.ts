@@ -6,15 +6,16 @@ import {
   Param,
   Post,
   Put,
-  Query,
   Req,
   Session,
   UploadedFile,
   UseGuards,
   UseInterceptors,
+  Query,
+  UploadedFiles,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import * as path from 'path';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/guards/role.guard';
@@ -30,10 +31,17 @@ export class ProductsController {
   constructor(private productsService: ProductsService) { }
 
   @Get()
-  getProducts(
-    @Query() query: optionsProduct
+  async getProducts(
+    @Req() req,
+    @Query() queryProducts?: optionsProduct
   ) {
-    return this.productsService.findMany(query);
+    const [data, totalCount] = await this.productsService.findMany(req, queryProducts)
+    const totalPages = Math.ceil(totalCount / (req.query.size ?? 10));
+    return {
+      data,
+      totalPages: totalPages,
+      totalCount,
+    }
   }
 
   @Get('topRated')
@@ -54,28 +62,37 @@ export class ProductsController {
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Delete(':id')
-  deleteUser(@Param('id') id: string) {
+  deleteProduct(@Param('id') id: string) {
     return this.productsService.deleteOne(id);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(UserRole.ADMIN)
   @Post()
-  @UseInterceptors(FileInterceptor('image'))
-  async createProduct(@Body() createProducts: ProductDto, @UploadedFile() file: Express.Multer.File) {
-    const product = await this.productsService.createSample(createProducts, file, path);
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'image', maxCount: 1 },
+    { name: 'attachments', maxCount: 5 },
+  ]))
+  async createProduct(@Body() createProducts: ProductDto,
+    @UploadedFiles() files: { image?: Express.Multer.File, attachments?: Express.Multer.File[] }
+  ) {
+    const product = await this.productsService.createSample(createProducts, files.image, path, files.attachments);
     return product
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(UserRole.ADMIN)
   @Put(':id')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileFieldsInterceptor([
+    { name: 'image', maxCount: 1 },
+    { name: 'attachments', maxCount: 5 },
+  ]))
   updateProduct(
     @Param('id') id: string,
     @Body() product: ProductDto,
-    @UploadedFile() file: Express.Multer.File) {
-    return this.productsService.update(id, product, file, path);
+    @UploadedFiles() files: { image?: Express.Multer.File, attachments?: Express.Multer.File[] }
+  ) {
+    return this.productsService.update(id, product, files.image, files.attachments, path);
   }
 
   @UseGuards(AuthGuard)

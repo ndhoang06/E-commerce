@@ -3,17 +3,20 @@ import { CategoriesService } from './categories.service';
 import { CategoriesController } from './categories.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Categories, CategoriesSchema } from './categories.schema';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import CategoryEntity from './categories.entity';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([
-      {
-        name: Categories.name,
-        schema: CategoriesSchema,
-      },
-    ]),
+    TypeOrmModule.forFeature([CategoryEntity]),
+    // MongooseModule.forFeature([
+    //   {
+    //     name: Categories.name,
+    //     schema: CategoriesSchema,
+    //   },
+    // ]),
   ],
   controllers: [CategoriesController],
   providers: [CategoriesService]
 })
-export class CategoriesModule {}
+export class CategoriesModule { }
