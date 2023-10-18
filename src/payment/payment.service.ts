@@ -26,12 +26,8 @@ export class PaymentService {
 
     let orderId = moment(date).format('DDHHmmss');
     let amount = 200000;
-    // let bankCode = req.body.bankCode;
-    let bankCode = 'VNPAYQR';
+    let bankCode = '';
     let locale = 'vn';
-    // if (locale === null || locale === '') {
-    //   locale = 'vn';
-    // }
     let currCode = 'VND';
     let vnp_Params = {};
     vnp_Params['vnp_Version'] = '2.1.0';
@@ -55,7 +51,6 @@ export class PaymentService {
     let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
     vnp_Params['vnp_SecureHash'] = signed;
     vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
-    console.log(vnpUrl)
     return vnpUrl
 
   }
