@@ -11,6 +11,8 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrderEntity } from './order.entity';
 import UserEntity from 'src/users/user.entity';
+import ProductEntity from 'src/products/product.entity';
+import { Product } from 'src/products/product.schema';
 
 @Injectable()
 export class OrdersService {
@@ -19,6 +21,8 @@ export class OrdersService {
     private readonly orderModel: Repository<OrderEntity>,
     @InjectRepository(UserEntity)
     private readonly userModel: Repository<UserEntity>,
+    @InjectRepository(ProductEntity)
+    private readonly productModel: Repository<ProductEntity>,
   ) { }
 
   async create(
@@ -68,46 +72,6 @@ export class OrdersService {
       .leftJoinAndSelect('orderItems.product', 'product')
       .select(['user', 'orderItems', 'order.shippingDetails', 'order.paymentMethod', 'order.itemsPrice', 'order.taxPrice'])
       .getOne();
-    // const order = await this.orderModel.aggregate([
-    //   {
-    //     $match: {
-    //       $expr: { $eq: ['$_id', { $toObjectId: id }] }
-    //     }
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: 'users',
-    //       localField: 'user',
-    //       foreignField: '_id',
-    //       as: 'user'
-    //     }
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: 'products',
-    //       localField: 'orderItems.productId',
-    //       foreignField: '_id',
-    //       as: 'products',
-    //     }
-    //   },
-    //   {
-    //     $project: {
-    //       user: '$user',
-    //       orderItems: {
-    //         $map: {
-    //           input: '$products',
-    //           as: "productsObj",
-    //           in: "$$productsObj",
-    //         }
-    //       },
-    //       shippingDetails: 1,
-    //       paymentMethod: 1,
-    //       itemsPrice: 1,
-    //       taxPrice: 1,
-    //     }
-    //   }
-    // ]);
-
     if (!order) throw new NotFoundException('No order with given ID.');
 
     return order;
@@ -120,13 +84,18 @@ export class OrdersService {
     const order = await this.orderModel.findOneBy({ id });
 
     if (!order) throw new NotFoundException('No order with given ID.');
-
     order.isPaid = true;
     order.paidAt = Date();
     // order.paymentResult = paymentResult;
 
     const updatedOrder = await this.orderModel.save(order);
-
+    await Promise.all(
+      order.orderItems.map(async (item) => {
+        const product = await this.productModel.findOneBy({ id: item.productId })
+        product.countInStock -= item.qty
+        return await this.productModel.save(product)
+      })
+    )
     return updatedOrder;
   }
 
@@ -152,46 +121,6 @@ export class OrdersService {
       .leftJoinAndSelect('orderItems.productId', 'product')
       .select(['user', 'orderItems', 'order.shippingDetails', 'order.paymentMethod', 'order.itemsPrice', 'order.taxPrice'])
       .getMany();
-    // const orders = await this.orderModel.aggregate([
-    //   {
-    //     $match: {
-    //       $expr: { $eq: ['$user', { $toObjectId: userId }] }
-    //     }
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: 'users',
-    //       localField: 'user',
-    //       foreignField: '_id',
-    //       as: 'user'
-    //     }
-    //   },
-    //   {
-    //     $lookup: {
-    //       from: 'products',
-    //       localField: 'orderItems.productId',
-    //       foreignField: '_id',
-    //       as: 'products',
-    //     }
-    //   },
-    //   {
-    //     $project: {
-    //       user: '$user',
-    //       // orderItems: '$orderItems',
-    //       orderItems: {
-    //         $map: {
-    //           input: '$products',
-    //           as: "productsObj",
-    //           in: "$$productsObj",
-    //         }
-    //       },
-    //       shippingDetails: 1,
-    //       paymentMethod: 1,
-    //       itemsPrice: 1,
-    //       taxPrice: 1,
-    //     }
-    //   }
-    // ]);
     return orders;
   }
 }
