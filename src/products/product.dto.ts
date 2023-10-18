@@ -1,7 +1,8 @@
-import { IsString, IsNumber } from 'class-validator';
+import { IsString, IsNumber, IsOptional } from 'class-validator';
 import { Categories } from 'src/categories/categories.schema';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import TrademarkEntity from 'src/trademark/trademark.entity';
+import { Expose } from 'class-transformer';
 
 export class optionsProduct {
   @ApiPropertyOptional()
@@ -43,4 +44,8 @@ export class ProductDto {
 
   @ApiPropertyOptional()
   urls: string[];
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  promotion: string;
 }

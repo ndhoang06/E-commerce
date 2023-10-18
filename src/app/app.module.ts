@@ -18,6 +18,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { TrademarkModule } from 'src/trademark/trademark.module';
 import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { AttachmentsModule } from 'src/attachments/attachments.module';
+import { PaymentModule } from 'src/payment/payment.module';
+import { PromotionModule } from 'src/promotion/promotion.module';
 
 @Module({
   imports: [
@@ -58,6 +60,8 @@ import { AttachmentsModule } from 'src/attachments/attachments.module';
     CategoriesModule,
     PublicModule,
     TrademarkModule,
+    PaymentModule,
+    PromotionModule,
     // SeedsModule,
   ],
   controllers: [AppController],

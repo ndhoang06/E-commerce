@@ -6,10 +6,11 @@ import {
 import { ProductDocument } from './product.schema';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import ProductEntity, { Review } from './product.entity';
+import ProductEntity, { ProductShow, Review } from './product.entity';
 import UserEntity from 'src/users/user.entity';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { AttachmentsService } from 'src/attachments/attachments.service';
+import { plainToClass } from 'class-transformer';
 
 @Injectable()
 export class ProductsService {
@@ -44,19 +45,24 @@ export class ProductsService {
   }
 
   async findMany(req, queryOptions) {
-    console.log(queryOptions)
     const keyword = req.query.keyword || "";
     const size = req.query.size || 10;
     const page = req.query.page || 1;
     const products = await this.productModel
       .createQueryBuilder('products')
       .where('products.name LIKE :keyword', { keyword: `%${keyword}%` })
+      .leftJoinAndSelect('products.category', 'category')
+      .leftJoinAndSelect('products.trademark', 'trademark')
+      .leftJoinAndSelect('products.reviews', 'reviews')
+      .leftJoinAndSelect('products.attachments', 'attachments')
+      .leftJoinAndSelect('products.promotion', 'promotion')
       .take(size)
       .skip(size * (page - 1))
-      .getManyAndCount()
+      .getMany()
 
-    if (products.length < 1) throw new NotFoundException('No products found.');
-    return products
+    if (products.length < 0) throw new NotFoundException('No products found.');
+    const result = products.map(product => plainToClass(ProductShow, product));
+    return result;
   }
 
   async findById(id: string) {
@@ -66,7 +72,9 @@ export class ProductsService {
         relations: {
           category: true,
           trademark: true,
-          reviews: true
+          reviews: true,
+          attachments: true,
+          promotion: true
         }
       }
     );
@@ -83,7 +91,7 @@ export class ProductsService {
     return createdProducts;
   }
 
-  async createSample(createProducts, image: Express.Multer.File, path, attachment: Express.Multer.File[]) {
+  async createSample(createProducts, image: Express.Multer.File, attachment: Express.Multer.File[]) {
     if (image[0].mimetype.match('image')) {
       const url_image = await this.cloudinaryService.uploadFile(image[0])
       const product = new ProductEntity()
@@ -116,7 +124,7 @@ export class ProductsService {
     image: Express.Multer.File,
     attachment: Express.Multer.File[],
   ) {
-    let { name, price, description, category, countInStock, trademark, urls } =
+    let { name, price, description, category, countInStock, trademark, urls, promotion } =
       attrs;
 
     const product = await this.productModel.findOneBy({ id });
@@ -149,6 +157,7 @@ export class ProductsService {
       product.trademark = trademark;
       product.category = category;
       product.countInStock = countInStock;
+      product.promotion = promotion;
       const updatedProduct = await this.productModel.save(product);
       return updatedProduct;
     } else {
@@ -157,13 +166,15 @@ export class ProductsService {
   }
 
   async createReview(
-    id: string,
+    idProduct: string,
     user,
     body
   ) {
 
-    const product = await this.productModel.findOneBy({ id });
-
+    const product = await this.productModel.createQueryBuilder('product')
+      .where('product.id=:idProduct', { idProduct })
+      .leftJoinAndSelect('product.reviews', 'review')
+      .getOne()
     if (!product) throw new NotFoundException('No product with given ID.');
 
     const checkUser = await this.userModel.findOneBy({ id: user.id });
@@ -173,19 +184,35 @@ export class ProductsService {
     review.comment = body.comment;
     review.products = product;
     review.rating = body.rating;
-
     await this.reviewModel.save(review)
+
+    const newProduct = await this.productModel.createQueryBuilder('product')
+      .where('product.id=:idProduct', { idProduct })
+      .leftJoinAndSelect('product.reviews', 'review')
+      .getOne()
+    newProduct.rating =
+      newProduct.reviews.reduce((acc, item) => item.rating + acc, 0) /
+      newProduct.reviews.length;
+    newProduct.numReviews = newProduct.reviews.length
+    const result = await this.productModel.save(newProduct)
+    return result
   }
 
-  async deleteOne(id: string): Promise<void> {
+  async deleteOne(id: string) {
     const product = await this.productModel.findOneBy({ id });
     if (!product) throw new NotFoundException('No product with given ID.');
 
     await this.productModel.delete(id);
-    await this.attachmentsService.remove(id)
+    return await this.attachmentsService.remove(id)
   }
 
-  async deleteMany(): Promise<void> {
-    await this.productModel.delete({});
+  async deleteMany() {
+    return await this.productModel.delete({});
+  }
+
+  async applyPromotion(idProduct: string, body) {
+    return this.productModel.update({ id: idProduct }, {
+      promotion: body.promotion
+    })
   }
 }

@@ -7,16 +7,14 @@ import {
   Post,
   Put,
   Req,
-  Session,
-  UploadedFile,
   UseGuards,
   UseInterceptors,
   Query,
   UploadedFiles,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { FileFieldsInterceptor, FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
-import * as path from 'path';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/guards/role.guard';
 import { Roles } from 'src/decorators/roles.decorator';
@@ -31,16 +29,18 @@ export class ProductsController {
   constructor(private productsService: ProductsService) { }
 
   @Get()
+  @UseInterceptors(ClassSerializerInterceptor)
   async getProducts(
     @Req() req,
     @Query() queryProducts?: optionsProduct
   ) {
-    const [data, totalCount] = await this.productsService.findMany(req, queryProducts)
-    const totalPages = Math.ceil(totalCount / (req.query.size ?? 10));
+    const data = await this.productsService.findMany(req, queryProducts)
+    // const [data, totalCount] = await this.productsService.findMany(req, queryProducts)
+    // const totalPages = Math.ceil(totalCount / (req.query.size ?? 10));
     return {
       data,
-      totalPages: totalPages,
-      totalCount,
+      // totalPages: totalPages,
+      // totalCount,
     }
   }
 
@@ -66,8 +66,8 @@ export class ProductsController {
     return this.productsService.deleteOne(id);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(UserRole.ADMIN)
   @Post()
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'image', maxCount: 1 },
@@ -76,12 +76,12 @@ export class ProductsController {
   async createProduct(@Body() createProducts: ProductDto,
     @UploadedFiles() files: { image?: Express.Multer.File, attachments?: Express.Multer.File[] }
   ) {
-    const product = await this.productsService.createSample(createProducts, files.image, path, files.attachments);
+    const product = await this.productsService.createSample(createProducts, files.image, files.attachments);
     return product
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  // @UseGuards(AuthGuard, RolesGuard)
+  // @Roles(UserRole.ADMIN)
   @Put(':id')
   @UseInterceptors(FileFieldsInterceptor([
     { name: 'image', maxCount: 1 },
@@ -105,4 +105,15 @@ export class ProductsController {
     const user = req.user
     return this.productsService.createReview(id, user, body);
   }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Put('apply-promotion/:id')
+  applyPromotion(
+    @Param('id') id: string,
+    @Body() body
+  ) {
+    return this.productsService.applyPromotion(id, body)
+  }
+
 }

@@ -1,5 +1,7 @@
+import { Expose } from 'class-transformer';
 import { AttachmentsEntity } from 'src/attachments/entities/attachment.entity';
 import CategoryEntity from 'src/categories/categories.entity';
+import { Promotion } from 'src/promotion/entities/promotion.entity';
 import TrademarkEntity from 'src/trademark/trademark.entity';
 import UserEntity from 'src/users/user.entity';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
@@ -35,7 +37,7 @@ class ProductEntity {
     @OneToMany(() => Review, (review) => review.products)
     reviews: Review[];
 
-    @Column({ nullable: false, default: 0 })
+    @Column('real', { nullable: false, default: 0 })
     rating: number;
 
     @Column({ nullable: false, default: 0 })
@@ -49,6 +51,9 @@ class ProductEntity {
 
     @OneToMany(() => AttachmentsEntity, (attachment) => attachment.products)
     attachments: AttachmentsEntity[]
+
+    @ManyToOne(() => Promotion, (promotion) => promotion.product, { nullable: true })
+    promotion: Promotion
 }
 @Entity()
 export class Review {
@@ -66,6 +71,15 @@ export class Review {
 
     @Column({ nullable: false })
     comment: string;
+}
+
+export class ProductShow {
+    price: number;
+    promotion: Promotion
+    @Expose({ toPlainOnly: true })
+    get pricePercent(): number {
+        return this.promotion ? this.price - (this.price * this.promotion.percent / 100) : this.price
+    }
 }
 
 export default ProductEntity;
