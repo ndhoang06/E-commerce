@@ -1,4 +1,3 @@
-import ProductEntity from "src/products/product.entity";
 import UserEntity from "src/users/user.entity";
 import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
@@ -30,7 +29,7 @@ export class OrderEntity {
     @ManyToOne(() => UserEntity, (users) => users.order)
     user: UserEntity
 
-    @Column({ type: 'text', array: true })
+    @Column('jsonb')
     orderItems: OrderItem[];
 
     @Column({ nullable: false, type: 'text' })

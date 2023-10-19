@@ -12,7 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { OrderEntity } from './order.entity';
 import UserEntity from 'src/users/user.entity';
 import ProductEntity from 'src/products/product.entity';
-import { Product } from 'src/products/product.schema';
+import { PaymentService } from 'src/payment/payment.service';
 
 @Injectable()
 export class OrdersService {
@@ -23,6 +23,7 @@ export class OrdersService {
     private readonly userModel: Repository<UserEntity>,
     @InjectRepository(ProductEntity)
     private readonly productModel: Repository<ProductEntity>,
+    private readonly paymentService: PaymentService
   ) { }
 
   async create(
@@ -78,25 +79,18 @@ export class OrdersService {
   }
 
   async updatePaid(
+    req,
     id: number,
     paymentResult: PaymentResult
   ) {
     const order = await this.orderModel.findOneBy({ id });
-
     if (!order) throw new NotFoundException('No order with given ID.');
     order.isPaid = true;
     order.paidAt = Date();
     // order.paymentResult = paymentResult;
-
-    const updatedOrder = await this.orderModel.save(order);
-    await Promise.all(
-      order.orderItems.map(async (item) => {
-        const product = await this.productModel.findOneBy({ id: item.productId })
-        product.countInStock -= item.qty
-        return await this.productModel.save(product)
-      })
-    )
-    return updatedOrder;
+    await this.orderModel.save(order);
+    const vnURL = await this.paymentService.payment(req, order)
+    return vnURL;
   }
 
   async updateDelivered(id: number) {

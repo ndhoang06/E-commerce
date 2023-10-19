@@ -51,10 +51,11 @@ export class OrdersController {
   @UseGuards(AuthGuard)
   @Put(':id/pay')
   async updateOrderPayment(
+    @Req() req,
     @Param('id') id: number,
     @Body() { paymentResult }: any
   ) {
-    return this.ordersService.updatePaid(id, paymentResult);
+    return this.ordersService.updatePaid(req, id, paymentResult);
   }
 
   //xác nhận giao hàng

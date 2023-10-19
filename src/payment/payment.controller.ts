@@ -1,20 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Req, Headers, Res } from '@nestjs/common';
+import { Controller, Get, Param, Post, Req, Res } from '@nestjs/common';
 import { PaymentService } from './payment.service';
-import * as crypto from 'crypto';
-import * as querystring from 'qs';
-import * as moment from 'moment';
 
 @Controller('payment')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) { }
 
-  @Get('create_payment_url')
-  create(@Req() req, @Headers() header, @Res() res) {
-    return this.paymentService.create()
+  @Get('vnpay_return/:id')
+  async vnpay_return(@Req() req, @Res() res, @Param('id') id: any) {
+    const result = await this.paymentService.vnpay_return(req)
+    if (result.code == '00') {
+      await this.paymentService.handleQuantiy(id)
+    }
+    res.json(result)
+    return result
   }
+
   @Post()
   async payment(@Req() req, @Res() res) {
-    const result = await this.paymentService.payment(req)
+    const result = await this.paymentService.payment(req, req.body.orderId)
     res.redirect(result)
   }
 

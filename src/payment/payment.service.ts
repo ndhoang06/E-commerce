@@ -2,14 +2,44 @@ import { Injectable } from '@nestjs/common';
 import * as moment from 'moment';
 let querystring = require('qs');
 import * as crypto from 'crypto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { OrderEntity } from 'src/orders/order.entity';
+import ProductEntity from 'src/products/product.entity';
 
 @Injectable()
 export class PaymentService {
-  create() {
-    return 'This action adds a new payment';
+  constructor(
+    @InjectRepository(OrderEntity)
+    private readonly oderRepository: Repository<OrderEntity>,
+    @InjectRepository(ProductEntity)
+    private readonly productRepository: Repository<ProductEntity>
+  ) { }
+
+  vnpay_return(req) {
+    let vnp_Params = req.query;
+    let secureHash = vnp_Params['vnp_SecureHash'];
+    delete vnp_Params['vnp_SecureHash'];
+    delete vnp_Params['vnp_SecureHashType'];
+    vnp_Params = sortObject(vnp_Params);
+    let tmnCode = process.env.vnp_TmnCode;
+    let secretKey = process.env.vnp_HashSecret;
+
+    let signData = querystring.stringify(vnp_Params, { encode: false });
+    let hmac = crypto.createHmac("sha512", secretKey);
+    let signed = hmac.update(new Buffer(signData, 'utf-8')).digest("hex");
+    if (secureHash === signed) {
+      return {
+        code: vnp_Params['vnp_ResponseCode']
+      }
+    } else {
+      return {
+        code: '97'
+      }
+    }
   }
 
-  async payment(req) {
+  async payment(req, order) {
     process.env.TZ = 'Asia/Ho_Chi_Minh';
 
     let date = new Date();
@@ -22,10 +52,12 @@ export class PaymentService {
     let tmnCode = process.env.vnp_TmnCode;
     let secretKey = process.env.vnp_HashSecret;
     let vnpUrl = process.env.vnp_Url;
-    let returnUrl = process.env.vnp_ReturnUrl;
+    let returnUrl = `http://localhost:3000/payment/vnpay_return/${order.id}`;
+    // let returnUrl = process.env.vnp_ReturnUrl;
+
 
     let orderId = moment(date).format('DDHHmmss');
-    let amount = 200000;
+    let amount = order.totalPrice;
     let bankCode = '';
     let locale = 'vn';
     let currCode = 'VND';
@@ -52,9 +84,21 @@ export class PaymentService {
     vnp_Params['vnp_SecureHash'] = signed;
     vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
     return vnpUrl
+  }
 
+  async handleQuantiy(id: number) {
+    const checkOrder = await this.oderRepository.findOneBy({ id })
+    const result = await Promise.all(
+      checkOrder.orderItems.map(async (item) => {
+        const product = await this.productRepository.findOneBy({ id: item.productId })
+        product.countInStock -= item.qty
+        return await this.productRepository.save(product)
+      })
+    )
+    return result
   }
 }
+
 function sortObject(obj) {
   let sorted = {};
   let str = [];
