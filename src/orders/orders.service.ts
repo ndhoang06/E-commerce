@@ -9,7 +9,7 @@ import { PaymentResult } from 'src/interfaces';
 import { Order, OrderDocument } from './order.schema';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { OrderEntity } from './order.entity';
+import { OrderEntity, Status } from './order.entity';
 import UserEntity from 'src/users/user.entity';
 import ProductEntity from 'src/products/product.entity';
 import { PaymentService } from 'src/payment/payment.service';
@@ -54,6 +54,7 @@ export class OrdersService {
       taxPrice,
       shippingPrice,
       totalPrice,
+      status: Status.PENDING
     });
 
     return createdOrder;
@@ -100,7 +101,7 @@ export class OrdersService {
 
     order.isDelivered = true;
     order.deliveredAt = Date();
-
+    order.status = Status.DONE
     const updatedOrder = await this.orderModel.save(order);
 
     return updatedOrder;
@@ -116,5 +117,23 @@ export class OrdersService {
       .select(['user', 'orderItems', 'order.shippingDetails', 'order.paymentMethod', 'order.itemsPrice', 'order.taxPrice'])
       .getMany();
     return orders;
+  }
+
+  cancelOrder(id, user) {
+    return this.orderModel.createQueryBuilder()
+      .update(OrderEntity)
+      .set({ status: Status.CANCEL })
+      .where('id=:id', { id })
+      .andWhere('user=:userId', { userId: user.id })
+      .andWhere('status =:status', { status: Status.PENDING })
+      .execute()
+  }
+
+  updateStatus(id, status: Status) {
+    return this.orderModel.createQueryBuilder()
+      .update(OrderEntity)
+      .set({ status: status })
+      .where('id=:id', { id })
+      .execute()
   }
 }

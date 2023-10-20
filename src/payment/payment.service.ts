@@ -4,7 +4,7 @@ let querystring = require('qs');
 import * as crypto from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { OrderEntity } from 'src/orders/order.entity';
+import { OrderEntity, Status } from 'src/orders/order.entity';
 import ProductEntity from 'src/products/product.entity';
 
 @Injectable()
@@ -88,6 +88,7 @@ export class PaymentService {
 
   async handleQuantiy(id: number) {
     const checkOrder = await this.oderRepository.findOneBy({ id })
+    checkOrder.status = Status.PAYMENT
     const result = await Promise.all(
       checkOrder.orderItems.map(async (item) => {
         const product = await this.productRepository.findOneBy({ id: item.productId })

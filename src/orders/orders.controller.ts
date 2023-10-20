@@ -41,10 +41,16 @@ export class OrdersController {
     return this.ordersService.findUserOrders(user.id);
   }
 
-  @UseGuards(AuthGuard)
   @Get(':id')
   async getOrder(@Param('id') id: string) {
     return this.ordersService.findById(id);
+  }
+
+  @UseGuards(AuthGuard)
+  @Put('cancel/:id')
+  async cancelOrder(@Param('id') id: string, @Req() req) {
+    const user = req.user
+    return this.ordersService.cancelOrder(id, user);
   }
 
   //đã thanh toán
@@ -64,5 +70,12 @@ export class OrdersController {
   @Put(':id/deliver')
   async updateOrderDelivery(@Param('id') id: number) {
     return this.ordersService.updateDelivered(id);
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Put(':id/status')
+  updateStatus(@Param('id') id: number, @Req() req) {
+    return this.ordersService.updateStatus(id, req.body.status)
   }
 }

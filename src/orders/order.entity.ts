@@ -14,6 +14,15 @@ export enum paymentMethod {
     MOMO = 'momo',
 }
 
+export enum Status {
+    PENDING = 'PENDING',
+    PROCESSING = 'PROCESSING',
+    PAYMENT = 'PAYMENT',
+    SHIPPING = 'SHIPPING',
+    DONE = 'DONE',
+    CANCEL = 'CANCEL'
+}
+
 export interface OrderItem {
     name: string;
     qty: number;
@@ -61,4 +70,7 @@ export class OrderEntity {
 
     @Column({ nullable: true })
     deliveredAt: string;
+
+    @Column({ nullable: true })
+    status: Status
 }
