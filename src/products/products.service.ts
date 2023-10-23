@@ -45,14 +45,10 @@ export class ProductsService {
   }
 
   async findMany(req, queryOptions) {
-    const keyword = req.query.keyword || "";
     const size = req.query.size || 10;
     const page = req.query.page || 1;
-    const products = await this.productModel
-      .createQueryBuilder('products')
-      .where('products.name LIKE :keyword', { keyword: `%${keyword}%` })
+    const products = await (await this.createInvoiceQueryBuilder(req))
       .leftJoinAndSelect('products.category', 'category')
-      .leftJoinAndSelect('products.trademark', 'trademark')
       .leftJoinAndSelect('products.reviews', 'reviews')
       .leftJoinAndSelect('products.attachments', 'attachments')
       .leftJoinAndSelect('products.promotion', 'promotion')
@@ -62,7 +58,27 @@ export class ProductsService {
 
     if (products.length < 0) throw new NotFoundException('No products found.');
     const result = products.map(product => plainToClass(ProductShow, product));
-    return result;
+    const count: any = products.length
+    return [result, count];
+  }
+
+  private async createInvoiceQueryBuilder(req) {
+    const keyword = req.query.keyword || "";
+    const products = await this.productModel
+      .createQueryBuilder('products')
+      .leftJoinAndSelect('products.trademark', 'trademark')
+      .where('products.name LIKE :keyword', { keyword: `%${keyword}%` })
+    if (req.query.priceStart && req.query.priceEnd) {
+      products.andWhere('products.price BETWEEN :priceStart AND :priceEnd', { priceStart: req.query.priceStart, priceEnd: req.query.priceEnd })
+    }
+    if (req.query.branch) {
+      products.andWhere('trademark.name=:branch', { branch: req.query.branch })
+    }
+    if (req.query.information) {
+      console.log('req.query.information', req.query.information)
+      products.andWhere(`products.information @> ARRAY[:...information]`, { information: [req.query.information] })
+    }
+    return products
   }
 
   async findById(id: string) {
@@ -103,6 +119,7 @@ export class ProductsService {
       product.description = createProducts.description;
       product.image = url_image;
       product.trademark = createProducts.trademark;
+      product.information = createProducts.information;
 
       const createdProduct = await this.productModel.save(product);
       if (attachment.length < 0) {

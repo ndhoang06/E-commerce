@@ -26,6 +26,10 @@ export class ProductDto {
   @IsArray()
   description: string[];
 
+  @ApiPropertyOptional()
+  @IsArray()
+  information: string[];
+
   // @ApiPropertyOptional()
   // @IsString()
   // brand: string;

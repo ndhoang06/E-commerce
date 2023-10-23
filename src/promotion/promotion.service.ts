@@ -16,7 +16,6 @@ export class PromotionService {
   ) { }
 
   create(createPromotionDto: CreatePromotionDto) {
-    console.log(createPromotionDto)
     return this.promotionRepository.save(createPromotionDto)
   }
 

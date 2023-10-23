@@ -34,13 +34,13 @@ export class ProductsController {
     @Req() req,
     @Query() queryProducts?: optionsProduct
   ) {
-    const data = await this.productsService.findMany(req, queryProducts)
-    // const [data, totalCount] = await this.productsService.findMany(req, queryProducts)
-    // const totalPages = Math.ceil(totalCount / (req.query.size ?? 10));
+    // const data = await this.productsService.findMany(req, queryProducts)
+    const [data, totalCount] = await this.productsService.findMany(req, queryProducts)
+    const totalPages = Math.ceil(totalCount / (req.query.limit ?? 10));
     return {
       data,
-      // totalPages: totalPages,
-      // totalCount,
+      totalPages,
+      totalCount,
     }
   }
 
@@ -77,6 +77,7 @@ export class ProductsController {
     @UploadedFiles() files: { image?: Express.Multer.File, attachments?: Express.Multer.File[] }
   ) {
     const product = await this.productsService.createSample(createProducts, files.image, files.attachments);
+
     return product
   }
 
