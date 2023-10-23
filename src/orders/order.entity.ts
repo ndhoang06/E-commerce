@@ -73,4 +73,7 @@ export class OrderEntity {
 
     @Column({ nullable: true })
     status: Status
+
+    @Column({ type: "decimal",default:Date.now() })
+    createdTimestamp: number;
 }
