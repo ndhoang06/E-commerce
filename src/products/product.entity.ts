@@ -31,8 +31,8 @@ class ProductEntity {
     @Column({ nullable: true, default: null })
     image: string;
 
-    @Column({ nullable: true })
-    description: string;
+    @Column({ nullable: true,type:'text' })
+    description: string[];
 
     @OneToMany(() => Review, (review) => review.products)
     reviews: Review[];

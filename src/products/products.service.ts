@@ -84,7 +84,7 @@ export class ProductsService {
   }
 
   async createMany(
-    products: Partial<ProductDocument>[]
+    products
   ) {
     const createdProducts = await this.productModel.save(products);
 
@@ -105,7 +105,7 @@ export class ProductsService {
       product.trademark = createProducts.trademark;
 
       const createdProduct = await this.productModel.save(product);
-      if (attachment.length < 1) {
+      if (attachment.length < 0) {
 
       } else {
         attachment.map(async (attachment) => {

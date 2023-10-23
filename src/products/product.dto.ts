@@ -1,4 +1,4 @@
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsArray } from 'class-validator';
 import { Categories } from 'src/categories/categories.schema';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import TrademarkEntity from 'src/trademark/trademark.entity';
@@ -23,8 +23,8 @@ export class ProductDto {
   price: string;
 
   @ApiPropertyOptional()
-  @IsString()
-  description: string;
+  @IsArray()
+  description: string[];
 
   // @ApiPropertyOptional()
   // @IsString()
