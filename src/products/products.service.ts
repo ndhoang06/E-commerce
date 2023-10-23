@@ -75,7 +75,6 @@ export class ProductsService {
       products.andWhere('trademark.name=:branch', { branch: req.query.branch })
     }
     if (req.query.information) {
-      console.log('req.query.information', req.query.information)
       products.andWhere(`products.information @> ARRAY[:...information]`, { information: [req.query.information] })
     }
     return products
