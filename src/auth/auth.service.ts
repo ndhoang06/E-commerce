@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { OAuth2Client } from 'google-auth-library';
+import UserEntity from 'src/users/user.entity';
 import { UsersService } from 'src/users/users.service';
 
 @Injectable()
@@ -36,10 +37,15 @@ export class AuthService {
         audience: process.env.GOOGLE_CLIENT_ID,
       });
       const payload = ticket.getPayload();
-      const user = await this.userService.createUser(payload);
+      const insertData = new UserEntity()
+      insertData.firstName = payload.family_name;
+      insertData.lastName = payload.given_name;
+      insertData.picture = payload.picture;
+      insertData.email = payload.email;
+
+      const user = await this.userService.createUser(insertData);
       const data = { ...payload, userRole: user.role, id: user.id };
       const token = await this.createJWT(data);
-      console.log(payload)
       return {
         access_token: token,
       };

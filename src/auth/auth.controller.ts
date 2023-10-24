@@ -17,8 +17,9 @@ export class AuthController {
     return this.authService.googleLogin(googleId);
   }
 
-  @Get('google')
+  @Post('google')
   async loginWithGoogle(@Body() body: { code: string }) {
     const payload = await this.authService.verifyGoogleToken(body.code)
+    return payload
   }
 }

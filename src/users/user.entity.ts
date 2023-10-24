@@ -12,8 +12,8 @@ class UserEntity {
     @PrimaryGeneratedColumn('uuid')
     id: string
 
-    @Column()
-    googleId?: string;
+    // @Column()
+    // googleId?: string;
 
     @Column()
     firstName: string;
