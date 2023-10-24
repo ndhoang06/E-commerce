@@ -1,9 +1,6 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { Categories, CategoriesDocument } from './categories.schema';
-import { Model } from 'mongoose';
 import { InjectRepository } from '@nestjs/typeorm';
 import CategoryEntity from './categories.entity';
 import { Repository } from 'typeorm';

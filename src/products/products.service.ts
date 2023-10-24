@@ -1,9 +1,10 @@
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ProductDocument } from './product.schema';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import ProductEntity, { ProductShow, Review } from './product.entity';
@@ -44,16 +45,18 @@ export class ProductsService {
     return products;
   }
 
-  async findMany(req, queryOptions) {
-    const size = req.query.size || 10;
-    const page = req.query.page || 1;
-    const products = await (await this.createInvoiceQueryBuilder(req))
+  async findMany(queryOptions) {
+    const size = queryOptions.size || 10;
+    const page = queryOptions.page || 1;
+    const products = await (await this.createInvoiceQueryBuilder(queryOptions))
+      .andWhere('products.category=:category', { category: queryOptions.category })
       .leftJoinAndSelect('products.category', 'category')
       .leftJoinAndSelect('products.reviews', 'reviews')
       .leftJoinAndSelect('products.attachments', 'attachments')
       .leftJoinAndSelect('products.promotion', 'promotion')
       .take(size)
       .skip(size * (page - 1))
+      .orderBy('products.rating', 'DESC')
       .getMany()
 
     if (products.length < 0) throw new NotFoundException('No products found.');
@@ -62,20 +65,23 @@ export class ProductsService {
     return [result, count];
   }
 
-  private async createInvoiceQueryBuilder(req) {
-    const keyword = req.query.keyword || "";
+  private async createInvoiceQueryBuilder(queryOptions) {
+    const keyword = queryOptions.keyword || "";
     const products = await this.productModel
       .createQueryBuilder('products')
       .leftJoinAndSelect('products.trademark', 'trademark')
       .where('products.name LIKE :keyword', { keyword: `%${keyword}%` })
-    if (req.query.priceStart && req.query.priceEnd) {
-      products.andWhere('products.price BETWEEN :priceStart AND :priceEnd', { priceStart: req.query.priceStart, priceEnd: req.query.priceEnd })
+    if (queryOptions.priceStart && queryOptions.priceEnd) {
+      products.andWhere('products.price BETWEEN :priceStart AND :priceEnd', { priceStart: queryOptions.priceStart, priceEnd: queryOptions.priceEnd })
     }
-    if (req.query.branch) {
-      products.andWhere('trademark.name=:branch', { branch: req.query.branch })
+    if (queryOptions.branch) {
+      products.andWhere('trademark.name=:branch', { branch: queryOptions.branch })
     }
-    if (req.query.information) {
-      products.andWhere(`products.information @> ARRAY[:...information]`, { information: [req.query.information] })
+    if (queryOptions.information) {
+      const query = queryOptions.information.map((item) => {
+        return item
+      })
+      products.andWhere(`products.information @> ARRAY[:...information]`, { information: query })
     }
     return products
   }
@@ -107,6 +113,10 @@ export class ProductsService {
   }
 
   async createSample(createProducts, image: Express.Multer.File, attachment: Express.Multer.File[]) {
+    const checkName = await this.productModel.findOneBy({ name: createProducts.name })
+    if (checkName) {
+      throw new HttpException('This products is already', HttpStatus.BAD_REQUEST)
+    }
     if (image[0].mimetype.match('image')) {
       const url_image = await this.cloudinaryService.uploadFile(image[0])
       const product = new ProductEntity()

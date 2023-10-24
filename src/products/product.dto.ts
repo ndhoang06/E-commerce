@@ -11,6 +11,16 @@ export class optionsProduct {
   size?: number;
   @ApiPropertyOptional()
   page?: number;
+  @ApiPropertyOptional()
+  priceStart?: number;
+  @ApiPropertyOptional()
+  priceEnd?: number;
+  @ApiPropertyOptional()
+  category?: string;
+  @ApiPropertyOptional()
+  branch?: string;
+  @ApiPropertyOptional()
+  information?: string[];
 }
 
 export class ProductDto {

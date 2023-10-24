@@ -11,7 +11,7 @@ export interface ShippingDetails {
 export enum paymentMethod {
     BLOCKCHAIN = 'blockchain',
     CASH = 'cash',
-    MOMO = 'momo',
+    VNPAY = 'vnpay',
 }
 
 export enum Status {
@@ -74,6 +74,6 @@ export class OrderEntity {
     @Column({ nullable: true })
     status: Status
 
-    @Column({ type: "decimal",default:Date.now() })
+    @Column({ type: "decimal", default: Date.now() })
     createdTimestamp: number;
 }

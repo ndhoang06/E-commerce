@@ -31,12 +31,10 @@ export class ProductsController {
   @Get()
   @UseInterceptors(ClassSerializerInterceptor)
   async getProducts(
-    @Req() req,
     @Query() queryProducts?: optionsProduct
   ) {
-    // const data = await this.productsService.findMany(req, queryProducts)
-    const [data, totalCount] = await this.productsService.findMany(req, queryProducts)
-    const totalPages = Math.ceil(totalCount / (req.query.limit ?? 10));
+    const [data, totalCount] = await this.productsService.findMany(queryProducts)
+    const totalPages = Math.ceil(totalCount / (queryProducts.size ?? 10));
     return {
       data,
       totalPages,

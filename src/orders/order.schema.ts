@@ -6,7 +6,7 @@ import { User } from 'src/users/user.schema';
 export enum paymentMethod {
   BLOCKCHAIN = 'blockchain',
   CASH = 'cash',
-  MOMO = 'momo',
+  VNPAY = 'vnpay',
 }
 
 export type OrderDocument = Order & mongoose.Document;

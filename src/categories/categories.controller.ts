@@ -4,9 +4,9 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/guards/role.guard';
-import { UserRole } from 'src/users/user.schema';
 import { Roles } from 'src/decorators/roles.decorator';
 import { ApiTags } from '@nestjs/swagger';
+import { UserRole } from 'src/users/user.entity';
 
 @Controller('categories')
 @ApiTags('Category')
