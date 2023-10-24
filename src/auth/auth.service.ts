@@ -10,19 +10,6 @@ export class AuthService {
     private userService: UsersService,
     private jwtService: JwtService,
   ) { }
-  async googleLogin(googleId) {
-    if (!googleId) {
-      return 'No User from google';
-    } else {
-      const user = await this.userService.createUser(googleId);
-      const data = { ...googleId, userRole: user.role, id: user.id };
-      const payload = await this.createJWT(data);
-      console.log(payload)
-      return {
-        access_token: payload,
-      };
-    }
-  }
 
   async verifyGoogleToken(code: string) {
     const client = new OAuth2Client({
@@ -48,6 +35,7 @@ export class AuthService {
       const token = await this.createJWT(data);
       return {
         access_token: token,
+        data
       };
     } catch (error) {
       throw new HttpException(
@@ -59,7 +47,6 @@ export class AuthService {
 
   createJWT(payload) {
     const data = {
-      googleId: payload.googleId,
       firstName: payload.firstName,
       lastName: payload.lastName,
       picture: payload.picture,

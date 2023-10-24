@@ -9,7 +9,7 @@ class TrademarkEntity {
     @OneToMany(() => ProductEntity, (product) => product.trademark)
     products: ProductEntity[];
 
-    @Column({ nullable: true, default: '' })
+    @Column({ nullable: true })
     image: string
 
     @Column({ nullable: false })

@@ -3,35 +3,35 @@ import { MigrationInterface, QueryRunner } from "typeorm"
 const TRADE_MARK = [
     {
         name: 'LG',
-        image: ''
+        image: 'lg_pcrcaf'
     },
     {
         name: 'Microsoft',
-        image: ''
+        image: 'microsoft_q4p9i0'
     },
     {
         name: 'ASUS',
-        image: ''
+        image: 'asus_pbvlnu'
     },
     {
         name: 'MSI',
-        image: ''
+        image: 'msi_utwvsn'
     },
     {
         name: 'ACER',
-        image: ''
+        image: 'acer_i4sd7w'
     },
     {
         name: 'DELL',
-        image: ''
+        image: 'dell_c41pzo'
     },
     {
         name: 'HP',
-        image: ''
+        image: 'hp_trijr6'
     },
     {
         name: 'LENOVO',
-        image: ''
+        image: 'lenovo_gicpu4'
     },
 ]
 
