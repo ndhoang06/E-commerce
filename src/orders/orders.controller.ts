@@ -13,7 +13,8 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { RolesGuard } from 'src/guards/role.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { UserRole } from 'src/users/user.schema';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiTags } from '@nestjs/swagger';
+import { OrderDTO } from './order.dto';
 
 @Controller('orders')
 @ApiTags('Order')
@@ -22,7 +23,7 @@ export class OrdersController {
 
   @UseGuards(AuthGuard)
   @Post()
-  async createOrder(@Body() body: any, @Req() req) {
+  async createOrder(@Body() body: OrderDTO, @Req() req) {
     const user = req.user
     return this.ordersService.create(body, user.id);
   }

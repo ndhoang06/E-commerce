@@ -15,7 +15,11 @@ export class PromotionService {
     private readonly productionRepository: Repository<ProductEntity>
   ) { }
 
-  create(createPromotionDto: CreatePromotionDto) {
+  async create(createPromotionDto: CreatePromotionDto) {
+    const checkPromotion = await this.promotionRepository.findOneBy({ percent: createPromotionDto.percent })
+    if (checkPromotion) {
+      return 'đã tồn tại'
+    }
     return this.promotionRepository.save(createPromotionDto)
   }
 

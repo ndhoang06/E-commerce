@@ -15,15 +15,16 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RolesGuard } from 'src/guards/role.guard';
 import { UserRole } from './user.schema';
+import { ApiTags } from '@nestjs/swagger';
 // import { AuthMiddleware } from 'src/guards/admin.guard';
 
 @Serialize(UserDto)
 @Controller('users')
+@ApiTags('User')
 export class UsersController {
   constructor(private usersService: UsersService) { }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @UseGuards(AuthGuard)
   @Get()
   getUsers() {
     return this.usersService.findAll();
@@ -36,8 +37,7 @@ export class UsersController {
     return this.usersService.deleteOne(id);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @UseGuards(AuthGuard)
   @Get(':id')
   async getUser(@Param('id') id: string) {
     const user = await this.usersService.findById(id);

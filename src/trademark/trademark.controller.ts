@@ -6,8 +6,10 @@ import { UserRole } from 'src/users/user.schema';
 import { RolesGuard } from 'src/guards/role.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('trademark')
+@ApiTags('Trademark')
 export class TrademarkController {
   constructor(private readonly trademarkService: TrademarkService) { }
 

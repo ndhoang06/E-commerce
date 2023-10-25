@@ -33,6 +33,7 @@ export class AuthService {
       const user = await this.userService.createUser(insertData);
       const data = { ...payload, userRole: user.role, id: user.id };
       const token = await this.createJWT(data);
+      console.log('token', token)
       return {
         access_token: token,
         data
