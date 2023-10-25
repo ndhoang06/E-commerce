@@ -1,24 +1,20 @@
 import {
-  Body,
+  ClassSerializerInterceptor,
   Controller,
   Delete,
   Get,
   Param,
-  Put,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { Serialize } from 'src/interceptors/serialize.interceptor';
-import { AdminProfileDto } from './dtos/admin.profile.dto';
-import { UserDto } from './dtos/user.dto';
 import { UsersService } from './users.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { RolesGuard } from 'src/guards/role.guard';
 import { UserRole } from './user.schema';
 import { ApiTags } from '@nestjs/swagger';
-// import { AuthMiddleware } from 'src/guards/admin.guard';
+import { UserDto } from './dtos/user.dto';
 
-@Serialize(UserDto)
 @Controller('users')
 @ApiTags('User')
 export class UsersController {
@@ -38,8 +34,9 @@ export class UsersController {
   }
 
   @UseGuards(AuthGuard)
+  @UseInterceptors(ClassSerializerInterceptor)
   @Get(':id')
-  async getUser(@Param('id') id: string) {
+  async getUser(@Param('id') id: string): Promise<UserDto> {
     const user = await this.usersService.findById(id);
     return user
   }

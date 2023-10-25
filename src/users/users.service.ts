@@ -11,6 +11,8 @@ import { ADMIN_EMAILS } from 'src/constants/user.constants';
 import { InjectRepository } from '@nestjs/typeorm';
 import UserEntity from './user.entity';
 import { Repository } from 'typeorm';
+import { plainToClass } from 'class-transformer';
+import { UserDto } from './dtos/user.dto';
 
 @Injectable()
 export class UsersService {
@@ -34,11 +36,10 @@ export class UsersService {
     return user;
   }
 
-  async findById(id: string) {
-
+  async findById(id: string): Promise<UserDto> {
     const user = await this.userModel.findOneBy({ id });
     if (!user) throw new NotFoundException('User not found.');
-    return user;
+    return plainToClass(UserDto, user);
   }
 
   async findAll() {
@@ -47,11 +48,8 @@ export class UsersService {
   }
 
   async deleteOne(id: string): Promise<void> {
-
     const user = await this.userModel.findOneBy({ id });
-
     if (!user) throw new NotFoundException('User not found.');
-
     await this.userModel.delete(id);
   }
 
