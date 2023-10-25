@@ -19,7 +19,7 @@ export class UserDto {
   lastName: string;
 
   @Expose()
-  pictures: string;
+  picture: string;
 
   @Expose()
   role: string;

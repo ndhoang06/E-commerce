@@ -58,7 +58,11 @@ export class OrdersService {
   }
 
   async findAll(user) {
-    const orders = await this.orderModel.find();
+    const orders = await this.orderModel.find({
+      relations: {
+        user: true
+      }
+    });
     return orders;
   }
 

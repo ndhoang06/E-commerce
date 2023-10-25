@@ -49,7 +49,6 @@ export class ProductsService {
     const size = queryOptions.size || 10;
     const page = queryOptions.page || 1;
     const products = await (await this.createInvoiceQueryBuilder(queryOptions))
-      .andWhere('products.category=:category', { category: queryOptions.category })
       .leftJoinAndSelect('products.category', 'category')
       .leftJoinAndSelect('products.reviews', 'reviews')
       .leftJoinAndSelect('products.attachments', 'attachments')
@@ -71,6 +70,9 @@ export class ProductsService {
       .createQueryBuilder('products')
       .leftJoinAndSelect('products.trademark', 'trademark')
       .where('products.name LIKE :keyword', { keyword: `%${keyword}%` })
+    if (queryOptions.category) {
+      products.andWhere('products.category=:category', { category: queryOptions.category })
+    }
     if (queryOptions.priceStart && queryOptions.priceEnd) {
       products.andWhere('products.price BETWEEN :priceStart AND :priceEnd', { priceStart: queryOptions.priceStart, priceEnd: queryOptions.priceEnd })
     }
@@ -104,11 +106,8 @@ export class ProductsService {
     return product;
   }
 
-  async createMany(
-    products
-  ) {
+  async createMany(products) {
     const createdProducts = await this.productModel.save(products);
-
     return createdProducts;
   }
 
