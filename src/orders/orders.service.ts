@@ -67,20 +67,16 @@ export class OrdersService {
       return 'No orders found'
     } else {
       const a = await Promise.all(orders.map(async (item) => {
-        const productId = item.orderItems.map(ordersItem => {
+        const productId = await Promise.all(item.orderItems.map(async ordersItem => {
+          const product = await this.productModel.findOne({ where: { id: ordersItem.productId } })
           return {
             qty: ordersItem.qty,
-            productId: ordersItem.productId
+            productId: product
           }
-        })
-        const product = await this.productModel.findOne({
-          where: {
-            id: productId[0].productId
-          }
-        })
+        }))
         return {
           id: item.id,
-          orderItems: { qty: productId[0].qty, productId: product },
+          orderItems: productId,
           shippingDetails: item.shippingDetails,
           paymentMethod: item.paymentMethod,
           taxPrice: item.taxPrice,
@@ -108,20 +104,20 @@ export class OrdersService {
     if (!order) throw new NotFoundException('No order with given ID.');
 
 
-    const productId = order.orderItems.map(ordersItem => {
+    const productId = await Promise.all(order.orderItems.map(async ordersItem => {
+      const product = await this.productModel.findOne({
+        where: {
+          id: ordersItem.productId
+        }
+      })
       return {
         qty: ordersItem.qty,
-        productId: ordersItem.productId
+        productId: product
       }
-    })
-    const product = await this.productModel.findOne({
-      where: {
-        id: productId[0].productId
-      }
-    })
+    }))
     return {
       id: order.id,
-      orderorders: { qty: productId[0].qty, productId: product },
+      orderItems: productId,
       shippingDetails: order.shippingDetails,
       paymentMethod: order.paymentMethod,
       taxPrice: order.taxPrice,
@@ -172,20 +168,21 @@ export class OrdersService {
       .where('order.user = :userId', { userId })
       .getMany();
     const a = await Promise.all(orders.map(async (item) => {
-      const productId = item.orderItems.map(ordersItem => {
+      const productId = await Promise.all(item.orderItems.map(async ordersItem => {
+        const product = await this.productModel.findOne({
+          where: {
+            id: ordersItem.productId
+          }
+        })
         return {
           qty: ordersItem.qty,
-          productId: ordersItem.productId
+          productId: product
         }
-      })
-      const product = await this.productModel.findOne({
-        where: {
-          id: productId[0].productId
-        }
-      })
+      }))
+
       return {
         id: item.id,
-        orderItems: { qty: productId[0].qty, productId: product },
+        orderItems: productId,
         shippingDetails: item.shippingDetails,
         paymentMethod: item.paymentMethod,
         taxPrice: item.taxPrice,
