@@ -57,10 +57,10 @@ export class OrdersService {
     return createdOrder;
   }
 
-  async findAll(user) {
+  async findAll() {
     const orders = await this.orderModel.find({
       relations: {
-        user: true
+        user: true,
       }
     });
     return orders;
@@ -70,10 +70,6 @@ export class OrdersService {
     const order = await this.orderModel
       .createQueryBuilder('order')
       .where('order.id = :id', { id })
-      .leftJoinAndSelect('order.user', 'user')
-      .leftJoinAndSelect('order.orderItems', 'orderItems')
-      .leftJoinAndSelect('orderItems.product', 'product')
-      .select(['user', 'orderItems', 'order.shippingDetails', 'order.paymentMethod', 'order.itemsPrice', 'order.taxPrice'])
       .getOne();
     if (!order) throw new NotFoundException('No order with given ID.');
 
@@ -112,10 +108,6 @@ export class OrdersService {
     const orders = await this.orderModel
       .createQueryBuilder('order')
       .where('order.user = :userId', { userId })
-      .leftJoinAndSelect('order.user', 'user')
-      .leftJoinAndSelect('order.orderItems', 'orderItems')
-      .leftJoinAndSelect('orderItems.productId', 'product')
-      .select(['user', 'orderItems', 'order.shippingDetails', 'order.paymentMethod', 'order.itemsPrice', 'order.taxPrice'])
       .getMany();
     return orders;
   }

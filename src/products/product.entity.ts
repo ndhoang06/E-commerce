@@ -1,6 +1,7 @@
 import { Expose } from 'class-transformer';
 import { AttachmentsEntity } from 'src/attachments/entities/attachment.entity';
 import CategoryEntity from 'src/categories/categories.entity';
+import { OrderEntity } from 'src/orders/order.entity';
 import { Promotion } from 'src/promotion/entities/promotion.entity';
 import TrademarkEntity from 'src/trademark/trademark.entity';
 import UserEntity from 'src/users/user.entity';
@@ -25,13 +26,13 @@ class ProductEntity {
     @ManyToOne(() => CategoryEntity, (category) => category.products)
     category: CategoryEntity
 
-    @ManyToOne(() => TrademarkEntity, (trademark) => trademark.products)
+    @ManyToOne(() => TrademarkEntity, (trademark) => trademark.products, { nullable: true })
     trademark: TrademarkEntity
 
     @Column({ nullable: true, default: null })
     image: string;
 
-    @Column({ nullable: true, type: 'text' })
+    @Column({ nullable: true, type: 'text', default: '' })
     description: string[];
 
     @Column('text', { nullable: true, array: true })
@@ -46,8 +47,8 @@ class ProductEntity {
     @Column({ nullable: false, default: 0 })
     numReviews: number;
 
-    @Column({ nullable: false, default: 0 })
-    price: number;
+    @Column({ nullable: true, default: '0' })
+    price: string;
 
     @Column({ nullable: false, default: 0 })
     countInStock: number;

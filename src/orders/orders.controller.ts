@@ -28,11 +28,10 @@ export class OrdersController {
     return this.ordersService.create(body, user.id);
   }
 
-  @UseGuards(AuthGuard)
+  // @UseGuards(AuthGuard)
   @Get()
-  async getOrders(@Req() req) {
-    const user = req.user
-    return this.ordersService.findAll(user);
+  async getOrders() {
+    return this.ordersService.findAll();
   }
 
   @UseGuards(AuthGuard)

@@ -1,5 +1,6 @@
+import ProductEntity from "src/products/product.entity";
 import UserEntity from "src/users/user.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 
 export interface ShippingDetails {
     address: string;
@@ -38,7 +39,7 @@ export class OrderEntity {
     @ManyToOne(() => UserEntity, (users) => users.order)
     user: UserEntity
 
-    @Column('jsonb')
+    @Column({ type: 'jsonb', nullable: true })
     orderItems: OrderItem[];
 
     @Column({ nullable: false, type: 'text' })
