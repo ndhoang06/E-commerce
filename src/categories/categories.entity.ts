@@ -11,6 +11,16 @@ class CategoryEntity {
 
     @OneToMany(() => ProductEntity, (product) => product.category)
     products: ProductEntity[]
+
+    @Column({ default: '' })
+    url: string
+
+    @Column({
+        type: 'timestamp',
+        default: () => 'CURRENT_TIMESTAMP',
+        name: 'createdAt',
+    })
+    created_at: Date
 }
 
 export default CategoryEntity;

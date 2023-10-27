@@ -21,7 +21,11 @@ export class CategoriesService {
   }
 
   async findAll() {
-    return await this.categoriesModel.find();
+    return await this.categoriesModel.find({
+      order: {
+        created_at: 'DESC'
+      }
+    });
   }
 
   async findOne(id: string) {
