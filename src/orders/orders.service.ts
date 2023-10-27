@@ -63,7 +63,41 @@ export class OrdersService {
         user: true,
       }
     });
-    return orders;
+    if (orders.length < 1) {
+      return 'No orders found'
+    } else {
+      const a = await Promise.all(orders.map(async (item) => {
+        const productId = item.orderItems.map(ordersItem => {
+          return {
+            qty: ordersItem.qty,
+            productId: ordersItem.productId
+          }
+        })
+        const product = await this.productModel.findOne({
+          where: {
+            id: productId[0].productId
+          }
+        })
+        return {
+          id: item.id,
+          orderItems: { qty: productId[0].qty, productId: product },
+          shippingDetails: item.shippingDetails,
+          paymentMethod: item.paymentMethod,
+          taxPrice: item.taxPrice,
+          shippingPrice: item.shippingPrice,
+          itemsPrice: item.itemsPrice,
+          totalPrice: item.totalPrice,
+          isPaid: item.isPaid,
+          paidAt: item.paidAt,
+          isDelivered: item.isDelivered,
+          deliveredAt: item.deliveredAt,
+          status: item.status,
+          createdTimestamp: item.createdTimestamp,
+          user: item.user
+        }
+      }))
+      return a
+    }
   }
 
   async findById(id: string) {
@@ -73,7 +107,35 @@ export class OrdersService {
       .getOne();
     if (!order) throw new NotFoundException('No order with given ID.');
 
-    return order;
+
+    const productId = order.orderItems.map(ordersItem => {
+      return {
+        qty: ordersItem.qty,
+        productId: ordersItem.productId
+      }
+    })
+    const product = await this.productModel.findOne({
+      where: {
+        id: productId[0].productId
+      }
+    })
+    return {
+      id: order.id,
+      orderorders: { qty: productId[0].qty, productId: product },
+      shippingDetails: order.shippingDetails,
+      paymentMethod: order.paymentMethod,
+      taxPrice: order.taxPrice,
+      shippingPrice: order.shippingPrice,
+      itemsPrice: order.itemsPrice,
+      totalPrice: order.totalPrice,
+      isPaid: order.isPaid,
+      paidAt: order.paidAt,
+      isDelivered: order.isDelivered,
+      deliveredAt: order.deliveredAt,
+      status: order.status,
+      createdTimestamp: order.createdTimestamp,
+      user: order.user
+    }
   }
 
   async updatePaid(
@@ -109,7 +171,37 @@ export class OrdersService {
       .createQueryBuilder('order')
       .where('order.user = :userId', { userId })
       .getMany();
-    return orders;
+    const a = await Promise.all(orders.map(async (item) => {
+      const productId = item.orderItems.map(ordersItem => {
+        return {
+          qty: ordersItem.qty,
+          productId: ordersItem.productId
+        }
+      })
+      const product = await this.productModel.findOne({
+        where: {
+          id: productId[0].productId
+        }
+      })
+      return {
+        id: item.id,
+        orderItems: { qty: productId[0].qty, productId: product },
+        shippingDetails: item.shippingDetails,
+        paymentMethod: item.paymentMethod,
+        taxPrice: item.taxPrice,
+        shippingPrice: item.shippingPrice,
+        itemsPrice: item.itemsPrice,
+        totalPrice: item.totalPrice,
+        isPaid: item.isPaid,
+        paidAt: item.paidAt,
+        isDelivered: item.isDelivered,
+        deliveredAt: item.deliveredAt,
+        status: item.status,
+        createdTimestamp: item.createdTimestamp,
+        user: item.user
+      }
+    }))
+    return a
   }
 
   cancelOrder(id, user) {
