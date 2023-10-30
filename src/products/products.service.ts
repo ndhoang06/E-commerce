@@ -48,7 +48,7 @@ export class ProductsService {
   async findMany(queryOptions) {
     const size = queryOptions.size || 10;
     const page = queryOptions.page || 1;
-    const products = await (await this.createInvoiceQueryBuilder(queryOptions))
+    const products = await (await this.createProductQueryBuilder(queryOptions))
       .leftJoinAndSelect('products.category', 'category')
       .leftJoinAndSelect('products.reviews', 'reviews')
       .leftJoinAndSelect('products.attachments', 'attachments')
@@ -64,7 +64,7 @@ export class ProductsService {
     return [result, count];
   }
 
-  private async createInvoiceQueryBuilder(queryOptions) {
+  private async createProductQueryBuilder(queryOptions) {
     const keyword = queryOptions.keyword || "";
     const products = await this.productModel
       .createQueryBuilder('products')

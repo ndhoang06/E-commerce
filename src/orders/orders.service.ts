@@ -66,7 +66,7 @@ export class OrdersService {
     if (orders.length < 1) {
       return 'No orders found'
     } else {
-      const a = await Promise.all(orders.map(async (item) => {
+      const result = await Promise.all(orders.map(async (item) => {
         const productId = await Promise.all(item.orderItems.map(async ordersItem => {
           const product = await this.productModel.findOne({ where: { id: ordersItem.productId } })
           return {
@@ -92,7 +92,7 @@ export class OrdersService {
           user: item.user
         }
       }))
-      return a
+      return result
     }
   }
 
@@ -167,7 +167,7 @@ export class OrdersService {
       .createQueryBuilder('order')
       .where('order.user = :userId', { userId })
       .getMany();
-    const a = await Promise.all(orders.map(async (item) => {
+    const result = await Promise.all(orders.map(async (item) => {
       const productId = await Promise.all(item.orderItems.map(async ordersItem => {
         const product = await this.productModel.findOne({
           where: {
@@ -198,7 +198,7 @@ export class OrdersService {
         user: item.user
       }
     }))
-    return a
+    return result
   }
 
   cancelOrder(id, user) {

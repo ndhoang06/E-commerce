@@ -9,7 +9,7 @@ export class CloudinaryService {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream((error, result) => {
         if (error) return reject(error);
-        resolve(result.public_id)
+        resolve(result.url)
       })
       streamifier.createReadStream(file.buffer).pipe(uploadStream);
     })
