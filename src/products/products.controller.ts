@@ -43,6 +43,7 @@ export class ProductsController {
   }
 
   @Get('getAllProducts')
+  @UseInterceptors(ClassSerializerInterceptor)
   getAllProducts() {
     return this.productsService.getAllProducts()
   }

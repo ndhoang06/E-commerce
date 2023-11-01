@@ -46,13 +46,16 @@ export class ProductsService {
   }
 
   async getAllProducts() {
-    return await this.productModel.createQueryBuilder('products')
+    const products = await this.productModel.createQueryBuilder('products')
+      .leftJoinAndSelect('products.trademark', 'trademark')
       .leftJoinAndSelect('products.category', 'category')
       .leftJoinAndSelect('products.reviews', 'reviews')
       .leftJoinAndSelect('products.attachments', 'attachments')
       .leftJoinAndSelect('products.promotion', 'promotion')
       .orderBy('products.rating', 'DESC')
       .getMany()
+    const result = products.map(product => plainToClass(ProductShow, product));
+    return result;
   }
 
   async findMany(queryOptions) {
