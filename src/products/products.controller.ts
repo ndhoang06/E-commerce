@@ -28,7 +28,7 @@ import { ApiTags } from '@nestjs/swagger';
 export class ProductsController {
   constructor(private productsService: ProductsService) { }
 
-  @Get()
+  @Get('getFilterProducts')
   @UseInterceptors(ClassSerializerInterceptor)
   async getProducts(
     @Query() queryProducts?: optionsProduct
@@ -40,6 +40,11 @@ export class ProductsController {
       totalPages,
       totalCount,
     }
+  }
+
+  @Get('getAllProducts')
+  getAllProducts() {
+    return this.productsService.getAllProducts()
   }
 
   @Get('topRated')

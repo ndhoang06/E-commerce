@@ -45,6 +45,16 @@ export class ProductsService {
     return products;
   }
 
+  async getAllProducts() {
+    return await this.productModel.createQueryBuilder('products')
+      .leftJoinAndSelect('products.category', 'category')
+      .leftJoinAndSelect('products.reviews', 'reviews')
+      .leftJoinAndSelect('products.attachments', 'attachments')
+      .leftJoinAndSelect('products.promotion', 'promotion')
+      .orderBy('products.rating', 'DESC')
+      .getMany()
+  }
+
   async findMany(queryOptions) {
     const size = queryOptions.size || 10;
     const page = queryOptions.page || 1;
