@@ -3,6 +3,7 @@ import { Categories } from 'src/categories/categories.schema';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import TrademarkEntity from 'src/trademark/trademark.entity';
 import { Expose } from 'class-transformer';
+import { TypeProduct } from './product.entity';
 
 export class optionsProduct {
   @ApiPropertyOptional()
@@ -19,6 +20,8 @@ export class optionsProduct {
   category?: string;
   @ApiPropertyOptional()
   branch?: string;
+  @ApiPropertyOptional()
+  type?: TypeProduct;
   @ApiPropertyOptional()
   information?: string[];
 }

@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import ProductEntity, { ProductShow, Review } from './product.entity';
+import ProductEntity, { ProductShow, Review, TypeProduct } from './product.entity';
 import UserEntity from 'src/users/user.entity';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { AttachmentsService } from 'src/attachments/attachments.service';
@@ -92,6 +92,9 @@ export class ProductsService {
     if (queryOptions.branch) {
       products.andWhere('trademark.name=:branch', { branch: queryOptions.branch })
     }
+    if (queryOptions.type) {
+      products.andWhere('products.type=:type', { type: queryOptions.type })
+    }
     if (queryOptions.information) {
       const query = queryOptions.information.map((item) => {
         return item
@@ -102,7 +105,7 @@ export class ProductsService {
   }
 
   async findById(id: string) {
-    const product = await this.productModel.find(
+    const product = await this.productModel.findOne(
       {
         where: { id: id },
         relations: {
@@ -250,7 +253,8 @@ export class ProductsService {
 
   async applyPromotion(idProduct: string, body) {
     return this.productModel.update({ id: idProduct }, {
-      promotion: body.promotion
+      promotion: body.promotion,
+      type: TypeProduct.KHUYENMAI
     })
   }
 }

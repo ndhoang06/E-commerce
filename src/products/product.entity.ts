@@ -11,7 +11,12 @@ export enum UserRole {
     ADMIN = 'admin',
     USER = 'user',
 }
-
+export enum TypeProduct {
+    BANCHAY = 'bán chạy',
+    KHUYENMAI = 'khuyến mãi',
+    NEW = 'sản phẩm mới',
+    KHONG = ''
+}
 @Entity()
 class ProductEntity {
     @PrimaryGeneratedColumn('uuid')
@@ -47,8 +52,11 @@ class ProductEntity {
     @Column({ nullable: false, default: 0 })
     numReviews: number;
 
-    @Column({ nullable: true, default: '0' })
-    price: string;
+    @Column({ nullable: true, default: 0, type: 'numeric' })
+    price: number;
+
+    @Column({ nullable: true, default: TypeProduct.NEW })
+    type: TypeProduct;
 
     @Column({ nullable: false, default: 0 })
     countInStock: number;
