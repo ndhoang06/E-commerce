@@ -23,7 +23,7 @@ export class optionsProduct {
   @ApiPropertyOptional()
   type?: TypeProduct;
   @ApiPropertyOptional()
-  information?: string[];
+  information?: object;
 }
 
 export class ProductDto {
@@ -40,8 +40,7 @@ export class ProductDto {
   description: string[];
 
   @ApiPropertyOptional()
-  @IsArray()
-  information: string[];
+  information: object;
 
   // @ApiPropertyOptional()
   // @IsString()

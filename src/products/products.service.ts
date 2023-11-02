@@ -96,10 +96,10 @@ export class ProductsService {
       products.andWhere('products.type=:type', { type: queryOptions.type })
     }
     if (queryOptions.information) {
-      const query = queryOptions.information.map((item) => {
-        return item
-      })
-      products.andWhere(`products.information @> ARRAY[:...information]`, { information: query })
+      const query = queryOptions.information
+      const qr = JSON.parse(query)
+      products.andWhere(`products.information =:info`, { info: qr })
+
     }
     return products
   }
@@ -135,6 +135,7 @@ export class ProductsService {
     if (image[0].mimetype.match('image')) {
       const url_image = await this.cloudinaryService.uploadFile(image[0])
       const product = new ProductEntity()
+      const information = JSON.parse(createProducts.information)
       product.name = createProducts.name;
       product.price = createProducts.price;
       product.category = createProducts.category;
@@ -143,7 +144,7 @@ export class ProductsService {
       product.description = createProducts.description;
       product.image = url_image;
       product.trademark = createProducts.trademark;
-      product.information = createProducts.information;
+      product.information = information;
 
       const createdProduct = await this.productModel.save(product);
       if (attachment.length < 0) {

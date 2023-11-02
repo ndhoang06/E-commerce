@@ -40,8 +40,8 @@ class ProductEntity {
     @Column({ nullable: true, type: 'text', default: '' })
     description: string[];
 
-    @Column('text', { nullable: true, array: true })
-    information: string[];
+    @Column('jsonb', { nullable: true })
+    information: object;
 
     @OneToMany(() => Review, (review) => review.products)
     reviews: Review[];
@@ -61,7 +61,10 @@ class ProductEntity {
     @Column({ nullable: false, default: 0 })
     countInStock: number;
 
-    @OneToMany(() => AttachmentsEntity, (attachment) => attachment.products)
+    @Column({ nullable: false, default: new Date() })
+    create_at: Date;
+
+    @OneToMany(() => AttachmentsEntity, (attachment) => attachment.products, { cascade: true })
     attachments: AttachmentsEntity[]
 
     @ManyToOne(() => Promotion, (promotion) => promotion.product, { nullable: true })
@@ -89,7 +92,7 @@ export class ProductShow {
     price: number;
     promotion: Promotion
     @Expose({ toPlainOnly: true })
-    get pricePercent(): number {
+    get unPrice(): number {
         return this.promotion ? this.price - (this.price * this.promotion.percent / 100) : this.price
     }
 }
