@@ -41,6 +41,11 @@ const TRADE_MARK = [
         name: 'LENOVO',
         image: 'lenovo_gicpu4'
     },
+    {
+        id: 'fdd22b65-2d4e-4de7-8939-09d363a60bec',
+        name: 'Khác',
+        image: ''
+    },
 ]
 
 export class SeedData1697423131972 implements MigrationInterface {
@@ -51,7 +56,6 @@ export class SeedData1697423131972 implements MigrationInterface {
                                     VALUES('${data.id}','${data.name}','${data.image}')`)
         }
     }
-
     public async down(queryRunner: QueryRunner): Promise<void> {
         for (const data of TRADE_MARK) {
             await queryRunner.query(

@@ -98,8 +98,9 @@ export class ProductsService {
     if (queryOptions.information) {
       const query = queryOptions.information
       const qr = JSON.parse(query)
-      products.andWhere(`products.information =:info`, { info: qr })
-
+      Object.entries(qr).forEach(([key, value]) => {
+        products.andWhere(`products.information ->>:key ILIKE :value`, { key, value: `%${value}%` })
+      })
     }
     return products
   }
