@@ -41,6 +41,10 @@ const CATEGORY = [
         id: '9733a4af-637a-41cc-a744-720d5179a446',
         name: 'Máy tính xách tay'
     },
+    {
+        id: '2934d10f-9404-4f10-b108-6400747d4cad',
+        name: 'Máy tính để bàn'
+    }
 ]
 
 export class SeedCaterogy1697423926651 implements MigrationInterface {
