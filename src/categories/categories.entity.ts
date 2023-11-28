@@ -12,7 +12,7 @@ class CategoryEntity {
     @OneToMany(() => ProductEntity, (product) => product.category)
     products: ProductEntity[]
 
-    @Column({ default: '' })
+    @Column({ nullable:true ,default:'' })
     url: string
 
     @Column({

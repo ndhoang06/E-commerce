@@ -241,6 +241,17 @@ export class ProductsService {
     return result
   }
 
+  async deleteMany(idProduct){
+   return await Promise.all(
+    idProduct.map(async id =>{
+        const product = await this.productModel.findOneBy({ id });
+        if (!product) throw new NotFoundException('No product with given ID.');
+        await this.productModel.delete(id);
+        return await this.attachmentsService.remove(id)
+      })
+    )
+  }
+
   async deleteOne(id: string) {
     const product = await this.productModel.findOneBy({ id });
     if (!product) throw new NotFoundException('No product with given ID.');
@@ -249,14 +260,26 @@ export class ProductsService {
     return await this.attachmentsService.remove(id)
   }
 
-  async deleteMany() {
-    return await this.productModel.delete({});
-  }
-
   async applyPromotion(idProduct: string, body) {
     return this.productModel.update({ id: idProduct }, {
       promotion: body.promotion,
       type: TypeProduct.KHUYENMAI
     })
   }
+  // async testJsonb() {
+  //   return this.productModel.createQueryBuilder()
+
+  //     // .update(ProductEntity)
+  //     // .set({ information: () => `information || '${JSON.stringify({ address: "test" })}'` })
+  //     // .where('id =:id', { id: 'e006891f-2a1c-41ff-8d1f-b5ef22359bfa' })
+  //     // .execute()
+
+
+  //     .where('id =:id', { id: 'e006891f-2a1c-41ff-8d1f-b5ef22359bfa' })
+  //     // .select("information #>> '{test1,test2}'", 'product_name')
+  //     // .select("information -> 'test1'", 'product_name')
+
+
+  //     .getRawMany()
+  // }
 }

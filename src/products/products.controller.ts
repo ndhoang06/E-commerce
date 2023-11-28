@@ -65,6 +65,13 @@ export class ProductsController {
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
+  @Delete('delete')
+  deleteProducts(@Body('id') id:[]) {
+    return this.productsService.deleteMany(id);
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
   @Delete(':id')
   deleteProduct(@Param('id') id: string) {
     return this.productsService.deleteOne(id);
@@ -120,5 +127,6 @@ export class ProductsController {
   ) {
     return this.productsService.applyPromotion(id, body)
   }
+
 
 }
