@@ -59,15 +59,15 @@ export class ProductsService {
   }
 
   async findMany(queryOptions) {
-    const size = queryOptions.size || 10;
-    const page = queryOptions.page || 1;
+    const limit = queryOptions.limit || 10;
+    const page = queryOptions.page || 0;
     const products = await (await this.createProductQueryBuilder(queryOptions))
       .leftJoinAndSelect('products.category', 'category')
       .leftJoinAndSelect('products.reviews', 'reviews')
       .leftJoinAndSelect('products.attachments', 'attachments')
       .leftJoinAndSelect('products.promotion', 'promotion')
-      .take(size)
-      .skip(size * (page - 1))
+      .take(limit)
+      .skip(limit * page)
       .orderBy('products.rating', 'DESC')
       .getMany()
 

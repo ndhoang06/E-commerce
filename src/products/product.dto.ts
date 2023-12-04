@@ -11,6 +11,8 @@ export class optionsProduct {
   @ApiPropertyOptional()
   size?: number;
   @ApiPropertyOptional()
+  limit?: number;
+  @ApiPropertyOptional()
   page?: number;
   @ApiPropertyOptional()
   priceStart?: number;
