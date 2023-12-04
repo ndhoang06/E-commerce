@@ -256,8 +256,9 @@ export class ProductsService {
     const product = await this.productModel.findOneBy({ id });
     if (!product) throw new NotFoundException('No product with given ID.');
 
-    await this.productModel.delete(id);
-    return await this.attachmentsService.remove(id)
+    
+    await this.attachmentsService.remove(id)
+    return await this.productModel.delete(id);
   }
 
   async applyPromotion(idProduct: string, body) {
