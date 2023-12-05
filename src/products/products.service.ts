@@ -12,6 +12,7 @@ import UserEntity from 'src/users/user.entity';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { AttachmentsService } from 'src/attachments/attachments.service';
 import { plainToClass } from 'class-transformer';
+import { optionsProduct } from './product.dto';
 
 @Injectable()
 export class ProductsService {
@@ -58,17 +59,18 @@ export class ProductsService {
     return result;
   }
 
-  async findMany(queryOptions) {
-    const limit = queryOptions.limit || 10;
-    const page = queryOptions.page || 0;
+  async findMany(queryOptions:optionsProduct) {
+    const { limit = 10, page = 0 } = queryOptions;
+    const skip = page * limit;
     const products = await (await this.createProductQueryBuilder(queryOptions))
       .leftJoinAndSelect('products.category', 'category')
       .leftJoinAndSelect('products.reviews', 'reviews')
       .leftJoinAndSelect('products.attachments', 'attachments')
       .leftJoinAndSelect('products.promotion', 'promotion')
+      .skip(skip)
       .take(limit)
-      .skip(limit * page)
       .orderBy('products.rating', 'DESC')
+      .addOrderBy('products.create_at','DESC')
       .getMany()
 
     if (products.length < 0) throw new NotFoundException('No products found.');
