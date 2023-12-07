@@ -7,8 +7,6 @@ export class AddToCartDto {
   @IsOptional()
   product?: ProductDocument;
 
-  @ApiPropertyOptional()
-  @IsNumber()
   qty: number;
 
   @ApiPropertyOptional()
