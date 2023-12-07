@@ -20,12 +20,10 @@ export class CartService {
   addCartItem({ qty, productId, product }: AddCartItem): CartItem {
     if (!productId && !product)
       throw new BadRequestException('No id or product provided.');
-
     if (product) {
       const { name, image, price, _id, countInStock } = product;
-
       const cartItem = {
-        productId: _id,
+        productId: productId,
         name,
         image,
         price,
