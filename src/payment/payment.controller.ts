@@ -23,4 +23,12 @@ export class PaymentController {
     res.redirect(result)
   }
 
+  @Post('momo')
+  async paymentMomo(@Req() req, @Res() res) {
+    const result = await this.paymentService.paymentMomo()
+    return {
+      link:result
+    }
+  }
+
 }

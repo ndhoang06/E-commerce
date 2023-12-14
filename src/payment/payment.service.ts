@@ -39,6 +39,81 @@ export class PaymentService {
     }
   }
 
+  async paymentMomo() {
+    //https://developers.momo.vn/#/docs/en/aiov2/?id=payment-method
+    const partnerCode = "MOMO";
+    const accessKey = "F8BBA842ECF85";
+    const secretkey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
+    const requestId = partnerCode + new Date().getTime();
+    const orderId = requestId;
+    const orderInfo = "Lon ân ";
+    const redirectUrl = "https://momo.vn/return";
+    const ipnUrl = "https://callback.url/notify";
+    // const ipnUrl = redirectUrl = "https://webhook.site/454e7b77-f177-4ece-8236-ddf1c26ba7f8";
+    const amount = "50000";
+    const requestType = "captureWallet"
+    const extraData = ""; //pass empty value if your merchant does not have stores
+
+    const rawSignature = "accessKey=" + accessKey + "&amount=" + amount + "&extraData=" + extraData + "&ipnUrl=" + ipnUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + partnerCode + "&redirectUrl=" + redirectUrl + "&requestId=" + requestId + "&requestType=" + requestType
+    var signature = crypto.createHmac('sha256', secretkey)
+      .update(rawSignature)
+      .digest('hex');
+
+    const requestBody = JSON.stringify({
+      partnerCode: partnerCode,
+      accessKey: accessKey,
+      requestId: requestId,
+      amount: amount,
+      orderId: orderId,
+      orderInfo: orderInfo,
+      redirectUrl: redirectUrl,
+      ipnUrl: ipnUrl,
+      extraData: extraData,
+      requestType: requestType,
+      signature: signature,
+      lang: 'en'
+    });
+    const https = require('https');
+    const options = {
+      hostname: 'test-payment.momo.vn',
+      port: 443,
+      path: '/v2/gateway/api/create',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Content-Length': Buffer.byteLength(requestBody)
+      }
+    }
+    const payUrl = await new Promise((resolve, reject) => {
+      const req = https.request(options, res => {
+        res.setEncoding('utf8');
+        let body = '';
+  
+        res.on('data', chunk => {
+          body += chunk;
+        });
+  
+        res.on('end', () => {
+          try {
+            const data = JSON.parse(body);
+            if (data.payUrl) {
+              resolve(data.payUrl);
+            } else {
+              reject(new Error(`Momo API error: ${data.localMessage}`));
+            }
+          } catch (error) {
+            reject(error);
+          }
+        });
+      });
+  
+      req.on('error', reject);
+      req.write(requestBody);
+      req.end();
+    });
+    return payUrl;
+  }
+
   async payment(req, order) {
     process.env.TZ = 'Asia/Ho_Chi_Minh';
 
@@ -52,12 +127,12 @@ export class PaymentService {
     let tmnCode = process.env.vnp_TmnCode;
     let secretKey = process.env.vnp_HashSecret;
     let vnpUrl = process.env.vnp_Url;
-    let returnUrl = `http://localhost:3000/payment/vnpay_return/${order.id}`;
-    // let returnUrl = process.env.vnp_ReturnUrl;
+    // let returnUrl = `http://localhost:3000/payment/vnpay_return/${order.id}`;
+    let returnUrl = process.env.vnp_ReturnUrl;
 
 
     let orderId = moment(date).format('DDHHmmss');
-    let amount = order.totalPrice;
+    let amount = 10000;
     let bankCode = '';
     let locale = 'vn';
     let currCode = 'VND';
@@ -75,7 +150,7 @@ export class PaymentService {
     vnp_Params['vnp_IpAddr'] = ipAddr;
     vnp_Params['vnp_CreateDate'] = createDate;
     if (bankCode !== null && bankCode !== '') {
-      vnp_Params['vnp_BankCode'] = bankCode;
+      vnp_Params['vnp_BankCode'] = 'VNPAYQR';
     }
     vnp_Params = sortObject(vnp_Params);
     let signData = querystring.stringify(vnp_Params, { encode: false });
