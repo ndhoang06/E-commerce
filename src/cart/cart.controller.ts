@@ -57,6 +57,16 @@ export class CartController {
     return shippingDetails;
   }
 
+  @Delete()
+  removeCart(@Session() session:any){
+    this.cartService.cart = session.cart ? session.cart : defaultCart;
+
+    const cartItems = this.cartService.removeCart();
+
+    session.cart.cartItems = cartItems;
+    return cartItems
+  }
+
   @Delete(':id')
   removeCartItem(@Param('id') id: string, @Session() session: any) {
     this.cartService.cart = session.cart ? session.cart : defaultCart;

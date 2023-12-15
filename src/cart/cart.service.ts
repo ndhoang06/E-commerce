@@ -66,6 +66,10 @@ export class CartService {
     return this.cart.paymentMethod;
   }
 
+  removeCart():CartItem[]  {
+    return this.cart.cartItems = [];
+  }
+
   removeCartItem(id: string): CartItem[] {
     const itemExists = this.cart.cartItems.find(x => x.productId === id);
 
