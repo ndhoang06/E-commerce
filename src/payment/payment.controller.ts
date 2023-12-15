@@ -25,10 +25,11 @@ export class PaymentController {
 
   @Post('momo')
   async paymentMomo(@Req() req, @Res() res) {
-    const result = await this.paymentService.paymentMomo()
-    return {
-      link:result
+    try {
+      const result = await this.paymentService.paymentMomo(req, req.body.orderId)
+      res.json(result);
+    } catch (error) {
+      console.log(error)
     }
   }
-
 }

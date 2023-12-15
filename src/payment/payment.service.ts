@@ -39,18 +39,18 @@ export class PaymentService {
     }
   }
 
-  async paymentMomo() {
+  async paymentMomo(req, order) {
     //https://developers.momo.vn/#/docs/en/aiov2/?id=payment-method
     const partnerCode = "MOMO";
     const accessKey = "F8BBA842ECF85";
     const secretkey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
     const requestId = partnerCode + new Date().getTime();
-    const orderId = requestId;
-    const orderInfo = "Lon ân ";
+    const orderId = order.id;
+    const orderInfo = `Payment for #${order.id}`;
     const redirectUrl = "https://momo.vn/return";
     const ipnUrl = "https://callback.url/notify";
     // const ipnUrl = redirectUrl = "https://webhook.site/454e7b77-f177-4ece-8236-ddf1c26ba7f8";
-    const amount = "50000";
+    const amount = order.totalPrice;
     const requestType = "captureWallet"
     const extraData = ""; //pass empty value if your merchant does not have stores
 
