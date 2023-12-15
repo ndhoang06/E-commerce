@@ -45,7 +45,7 @@ export class PaymentService {
     const accessKey = "F8BBA842ECF85";
     const secretkey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
     const requestId = partnerCode + new Date().getTime();
-    const orderId = order.id;
+    const orderId = `${order.id}`;
     const orderInfo = `Payment for #${order.id}`;
     const redirectUrl = "https://momo.vn/return";
     const ipnUrl = "https://callback.url/notify";
@@ -96,6 +96,7 @@ export class PaymentService {
         res.on('end', () => {
           try {
             const data = JSON.parse(body);
+            console.log('data',data)
             if (data.payUrl) {
               resolve(data.payUrl);
             } else {
