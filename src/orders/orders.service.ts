@@ -218,4 +218,8 @@ export class OrdersService {
       .where('id=:id', { id })
       .execute()
   }
+
+  removeOrder(id,req){
+    return this.orderModel.delete(id)
+  }
 }

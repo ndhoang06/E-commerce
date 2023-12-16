@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Post,
@@ -77,5 +78,10 @@ export class OrdersController {
   @Put(':id/status')
   updateStatus(@Param('id') id: number, @Req() req) {
     return this.ordersService.updateStatus(id, req.body.status)
+  }
+
+  @Delete(':id')
+  removeOrder(@Param('id') id:number, @Req() req){
+    return this.ordersService.removeOrder(id,req)
   }
 }

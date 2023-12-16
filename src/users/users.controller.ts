@@ -4,6 +4,8 @@ import {
   Delete,
   Get,
   Param,
+  Put,
+  Req,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -39,6 +41,14 @@ export class UsersController {
   async getUser(@Param('id') id: string): Promise<UserDto> {
     const user = await this.usersService.findById(id);
     return user
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @Put('set-role/:id')
+  async setRole(@Param('id') id:string,@Req() req) {
+    const user = await this.usersService.findById(id)
+    return this.usersService.setRole(id,req.body.role)
   }
 
   // @UseGuards(AuthMiddleware)

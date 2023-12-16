@@ -128,5 +128,4 @@ export class ProductsController {
     return this.productsService.applyPromotion(id, body)
   }
 
-
 }

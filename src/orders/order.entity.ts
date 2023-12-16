@@ -42,8 +42,8 @@ export class OrderEntity {
     @Column({ type: 'jsonb', nullable: true })
     orderItems: OrderItem[];
 
-    @Column({ nullable: false, type: 'text' })
-    shippingDetails: ShippingDetails
+    @Column({ nullable: true, type: 'jsonb', })
+    shippingDetails: ShippingDetails[]
 
     @Column({ nullable: false })
     paymentMethod: paymentMethod;

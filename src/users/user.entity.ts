@@ -1,6 +1,7 @@
+import { Build } from 'src/build/entities/build.entity';
 import { OrderEntity } from 'src/orders/order.entity';
 import { Review } from 'src/products/product.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 export enum UserRole {
     ADMIN = 'admin',
@@ -35,6 +36,9 @@ class UserEntity {
 
     @OneToMany(() => Review, (review) => review.user)
     review: Review[]
+
+    @OneToOne(() => Build, (build) => build.user)
+    build: Build;
 }
 
 export default UserEntity;

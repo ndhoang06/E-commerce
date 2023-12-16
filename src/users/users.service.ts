@@ -53,6 +53,10 @@ export class UsersService {
     await this.userModel.delete(id);
   }
 
+  async setRole(id,role:UserRole){
+    await this.userModel.update(id,{role})
+  } 
+
   async update(
     id: string,
     attrs: Partial<UserDocument>

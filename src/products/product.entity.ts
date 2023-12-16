@@ -1,5 +1,6 @@
 import { Expose } from 'class-transformer';
 import { AttachmentsEntity } from 'src/attachments/entities/attachment.entity';
+import { Build } from 'src/build/entities/build.entity';
 import CategoryEntity from 'src/categories/categories.entity';
 import { OrderEntity } from 'src/orders/order.entity';
 import { Promotion } from 'src/promotion/entities/promotion.entity';
@@ -69,6 +70,7 @@ class ProductEntity {
 
     @ManyToOne(() => Promotion, (promotion) => promotion.product, { nullable: true })
     promotion: Promotion
+
 }
 @Entity()
 export class Review {
