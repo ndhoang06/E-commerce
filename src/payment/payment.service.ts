@@ -128,8 +128,8 @@ export class PaymentService {
     let tmnCode = process.env.vnp_TmnCode;
     let secretKey = process.env.vnp_HashSecret;
     let vnpUrl = process.env.vnp_Url;
-    // let returnUrl = `http://localhost:3000/payment/vnpay_return/${order.id}`;
-    let returnUrl = process.env.vnp_ReturnUrl;
+    let returnUrl = `http://localhost:3000/payment/vnpay_return/${order.id}`;
+    // let returnUrl = process.env.vnp_ReturnUrl;
 
 
     let orderId = moment(date).format('DDHHmmss');

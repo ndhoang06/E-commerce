@@ -39,6 +39,9 @@ class UserEntity {
 
     @OneToOne(() => Build, (build) => build.user)
     build: Build;
+
+    @Column({ type: "decimal", default: Date.now() })
+    createdTimestamp: number;
 }
 
 export default UserEntity;

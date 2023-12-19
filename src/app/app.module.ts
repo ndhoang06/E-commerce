@@ -21,6 +21,7 @@ import { AttachmentsModule } from 'src/attachments/attachments.module';
 import { PaymentModule } from 'src/payment/payment.module';
 import { PromotionModule } from 'src/promotion/promotion.module';
 import { BuildModule } from 'src/build-pc/build.module';
+import { StatisticalModule } from 'src/statistical/statistical.module';
 
 @Module({
   imports: [
@@ -63,7 +64,8 @@ import { BuildModule } from 'src/build-pc/build.module';
     TrademarkModule,
     PaymentModule,
     PromotionModule,
-    BuildModule
+    BuildModule,
+    StatisticalModule
     // SeedsModule,
   ],
   controllers: [AppController],
