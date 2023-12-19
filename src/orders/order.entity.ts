@@ -10,7 +10,7 @@ export interface ShippingDetails {
     phone: number;
 }
 export enum paymentMethod {
-    BLOCKCHAIN = 'blockchain',
+    MOMO = 'momo',
     CASH = 'cash',
     VNPAY = 'vnpay',
 }
