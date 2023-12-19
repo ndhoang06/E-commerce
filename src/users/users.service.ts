@@ -55,6 +55,11 @@ export class UsersService {
 
   async setRole(id,role:UserRole){
     await this.userModel.update(id,{role})
+    return this.userModel.findOne({
+      where:{
+        id
+      }
+    })
   } 
 
   async update(
