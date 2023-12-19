@@ -133,7 +133,7 @@ export class PaymentService {
 
 
     let orderId = moment(date).format('DDHHmmss');
-    let amount = 10000;
+    let amount = order.totalPrice;
     let bankCode = '';
     let locale = 'vn';
     let currCode = 'VND';

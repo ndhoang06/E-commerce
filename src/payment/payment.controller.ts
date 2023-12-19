@@ -20,7 +20,7 @@ export class PaymentController {
   @Post()
   async payment(@Req() req, @Res() res) {
     const result = await this.paymentService.payment(req, req.body.orderId)
-    res.redirect(result)
+    res.json(result);
   }
 
   @Post('momo')
