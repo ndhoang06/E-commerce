@@ -28,6 +28,11 @@ import { ApiTags } from '@nestjs/swagger';
 export class ProductsController {
   constructor(private productsService: ProductsService) { }
 
+@Get('recommender')
+async recommender(@Req() req){
+  return await this.productsService.recommender(req)
+}
+
   @Get('getFilterProducts')
   @UseInterceptors(ClassSerializerInterceptor)
   async getProducts(

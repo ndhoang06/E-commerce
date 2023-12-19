@@ -20,7 +20,7 @@ import { CloudinaryModule } from 'src/cloudinary/cloudinary.module';
 import { AttachmentsModule } from 'src/attachments/attachments.module';
 import { PaymentModule } from 'src/payment/payment.module';
 import { PromotionModule } from 'src/promotion/promotion.module';
-import { BuildModule } from 'src/build/build.module';
+import { BuildModule } from 'src/build-pc/build.module';
 
 @Module({
   imports: [

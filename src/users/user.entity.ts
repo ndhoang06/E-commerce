@@ -1,4 +1,4 @@
-import { Build } from 'src/build/entities/build.entity';
+import { Build } from 'src/build-pc/entities/build.entity';
 import { OrderEntity } from 'src/orders/order.entity';
 import { Review } from 'src/products/product.entity';
 import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';

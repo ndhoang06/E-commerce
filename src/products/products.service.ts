@@ -27,6 +27,52 @@ export class ProductsService {
     private readonly userModel: Repository<UserEntity>,
   ) { }
 
+  async recommender(req) {
+    const review = await this.reviewModel.find({
+      relations: {
+        user: true,
+        products: true
+      }
+    })
+    const users = [];
+    const products = [];
+    const ratings = [];
+    review.forEach(doc => {
+      const user = doc.user.id;
+      const product = doc.products.id;
+      const rating = doc.rating;
+      if (!users.includes(user)) {
+        users.push(user);
+      }
+      if (!products.includes(product)) {
+        products.push(product);
+      }
+      ratings.push([users.indexOf(user), products.indexOf(product), rating]);
+    });
+
+    const similarityMatrix = [];
+
+    for (let i = 0; i < users.length; i++) {
+      const row = [];
+      for (let j = 0; j < users.length; j++) {
+        const similarities = [];
+        for (let k = 0; k < products.length; k++) {
+          if (ratings[i][k] && ratings[j][k]) {
+            similarities.push(ratings[i][k] - ratings[j][k]);
+          }
+        }
+        if (similarities.length > 0) {
+          const similarity = similarities.reduce((acc, cur) => acc + cur) / similarities.length;
+          row.push(similarity);
+        } else {
+          row.push(0);
+        }
+      }
+      similarityMatrix.push(row);
+    }
+    return similarityMatrix;
+  }
+
   async findTopRated() {
     const products = await this.productModel
       .createQueryBuilder()
@@ -59,7 +105,7 @@ export class ProductsService {
     return result;
   }
 
-  async findMany(queryOptions:optionsProduct) {
+  async findMany(queryOptions: optionsProduct) {
     const { limit = 10, page = 0 } = queryOptions;
     const skip = page * limit;
     const products = await (await this.createProductQueryBuilder(queryOptions))
@@ -70,7 +116,7 @@ export class ProductsService {
       .skip(skip)
       .take(limit)
       .orderBy('products.rating', 'DESC')
-      .addOrderBy('products.create_at','DESC')
+      .addOrderBy('products.create_at', 'DESC')
       .getMany()
 
     if (products.length < 0) throw new NotFoundException('No products found.');
@@ -243,9 +289,9 @@ export class ProductsService {
     return result
   }
 
-  async deleteMany(idProduct){
-   return await Promise.all(
-    idProduct.map(async id =>{
+  async deleteMany(idProduct) {
+    return await Promise.all(
+      idProduct.map(async id => {
         const product = await this.productModel.findOneBy({ id });
         if (!product) throw new NotFoundException('No product with given ID.');
         await this.productModel.delete(id);
@@ -258,7 +304,7 @@ export class ProductsService {
     const product = await this.productModel.findOneBy({ id });
     if (!product) throw new NotFoundException('No product with given ID.');
 
-    
+
     await this.attachmentsService.remove(id)
     return await this.productModel.delete(id);
   }
