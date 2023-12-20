@@ -143,10 +143,9 @@ export class OrdersService {
     if (!order) throw new NotFoundException('No order with given ID.');
     order.isPaid = true;
     order.paidAt = Date();
+    order.status = Status.PAYMENT;
     // order.paymentResult = paymentResult;
-    await this.orderModel.save(order);
-    const vnURL = await this.paymentService.payment(req, order)
-    return vnURL;
+    return await this.orderModel.save(order);
   }
 
   async updateDelivered(id: number) {
