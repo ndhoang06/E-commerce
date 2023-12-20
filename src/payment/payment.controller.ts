@@ -12,9 +12,10 @@ export class PaymentController {
     const result = await this.paymentService.vnpay_return(req)
     if (result.code == '00') {
       await this.paymentService.handleQuantiy(id)
+      res.redirect('http://localhost:8080/payment-success');
+    } else {
+      res.redirect('http://localhost:8080/payment-error');
     }
-    res.json(result)
-    return result
   }
 
   @Post()
