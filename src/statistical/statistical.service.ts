@@ -18,7 +18,7 @@ export class StatisticalService {
     const startDate = new Date(query?.startDate);
     const endDate = new Date(query?.endDate);
       let totalProfit = 0;
-    if (!startDate && !endDate) {
+    if (isNaN(startDate.getTime()) && isNaN(endDate.getTime())) {
       const orders = await this.orderRepository.createQueryBuilder('order')
         .where('order.status = :status', { status: Status.DONE });
       const result = await orders.getMany();
