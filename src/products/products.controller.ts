@@ -22,16 +22,21 @@ import { UserRole } from 'src/users/user.schema';
 import { ProductDto, optionsProduct } from './product.dto';
 import { ReviewDto } from './review.dto';
 import { ApiTags } from '@nestjs/swagger';
-
+import axios from 'axios';
 @Controller('products')
 @ApiTags('Products')
 export class ProductsController {
   constructor(private productsService: ProductsService) { }
 
-@Get('recommender')
-async recommender(@Req() req){
-  return await this.productsService.recommender(req)
-}
+  @UseGuards(AuthGuard)
+  @Get('recommender')
+  async recommender(@Req() req) {
+    const pythonUrl = "http://127.0.0.1:5000/hello";
+    const response = await axios.get(pythonUrl);
+    const dataFromPython = response.data;
+    const user = req.user.id;
+    return await this.productsService.recommender(dataFromPython, user)
+  }
 
   @Get('getFilterProducts')
   @UseInterceptors(ClassSerializerInterceptor)
@@ -71,7 +76,7 @@ async recommender(@Req() req){
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @Delete('delete')
-  deleteProducts(@Body('id') id:[]) {
+  deleteProducts(@Body('id') id: []) {
     return this.productsService.deleteMany(id);
   }
 

@@ -27,50 +27,23 @@ export class ProductsService {
     private readonly userModel: Repository<UserEntity>,
   ) { }
 
-  async recommender(req) {
-    const review = await this.reviewModel.find({
-      relations: {
-        user: true,
-        products: true
-      }
-    })
-    const users = [];
-    const products = [];
-    const ratings = [];
-    review.forEach(doc => {
-      const user = doc.user.id;
-      const product = doc.products.id;
-      const rating = doc.rating;
-      if (!users.includes(user)) {
-        users.push(user);
-      }
-      if (!products.includes(product)) {
-        products.push(product);
-      }
-      ratings.push([users.indexOf(user), products.indexOf(product), rating]);
-    });
-
-    const similarityMatrix = [];
-
-    for (let i = 0; i < users.length; i++) {
-      const row = [];
-      for (let j = 0; j < users.length; j++) {
-        const similarities = [];
-        for (let k = 0; k < products.length; k++) {
-          if (ratings[i][k] && ratings[j][k]) {
-            similarities.push(ratings[i][k] - ratings[j][k]);
+  async recommender(dataFromPython,user) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const recommendedProducts = [];
+        const a = dataFromPython.forEach(item => {
+          if (user === item.userId) {
+            const uuidArray = item.recommended_products.split(" ");
+            recommendedProducts.push(...uuidArray);
           }
-        }
-        if (similarities.length > 0) {
-          const similarity = similarities.reduce((acc, cur) => acc + cur) / similarities.length;
-          row.push(similarity);
-        } else {
-          row.push(0);
-        }
+        });
+        const products = await this.productModel.findByIds(recommendedProducts)
+        resolve(products);
+      } catch (error) {
+        reject(error);
       }
-      similarityMatrix.push(row);
-    }
-    return similarityMatrix;
+    });
+    
   }
 
   async findTopRated() {
