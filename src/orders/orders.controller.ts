@@ -31,8 +31,9 @@ export class OrdersController {
 
   // @UseGuards(AuthGuard)
   @Get()
-  async getOrders() {
-    return this.ordersService.findAll();
+  async getOrders(@Req() req) {
+    const status = req.query.status
+    return this.ordersService.findAll(status);
   }
 
   @UseGuards(AuthGuard)

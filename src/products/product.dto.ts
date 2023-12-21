@@ -38,7 +38,7 @@ export class ProductDto {
   price: string;
 
   @ApiPropertyOptional()
-  @IsArray()
+  // @IsArray()
   description: string[];
 
   @ApiPropertyOptional()

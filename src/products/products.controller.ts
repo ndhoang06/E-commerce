@@ -28,6 +28,7 @@ import axios from 'axios';
 export class ProductsController {
   constructor(private productsService: ProductsService) { }
 
+  @UseInterceptors(ClassSerializerInterceptor)
   @UseGuards(AuthGuard)
   @Get('recommender')
   async recommender(@Req() req) {

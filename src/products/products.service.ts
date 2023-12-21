@@ -38,7 +38,8 @@ export class ProductsService {
           }
         });
         const products = await this.productModel.findByIds(recommendedProducts)
-        resolve(products);
+        const result = products.map(product => plainToClass(ProductShow, product));
+        resolve(result);
       } catch (error) {
         reject(error);
       }

@@ -79,7 +79,7 @@ export class Review {
     @ManyToOne(() => UserEntity, (user) => user.review)
     user: UserEntity
 
-    @ManyToOne(() => ProductEntity, (products) => products.reviews)
+    @ManyToOne(() => ProductEntity, (products) => products.reviews , {onDelete: 'CASCADE'})
     products: ProductEntity
 
     @Column({ nullable: false })
