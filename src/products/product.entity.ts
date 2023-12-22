@@ -85,7 +85,7 @@ export class Review {
     @Column({ nullable: false })
     rating: number;
 
-    @Column({ nullable: false })
+    @Column({ nullable: true })
     comment: string;
 }
 
