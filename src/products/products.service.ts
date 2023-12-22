@@ -47,6 +47,19 @@ export class ProductsService {
     
   }
 
+  async showRating(id){
+    const review  = await this.reviewModel.createQueryBuilder('review')
+    .leftJoinAndSelect('review.user','user')
+    .leftJoinAndSelect('review.products','product')
+    .where('product.id =:id',{id})
+    .select([
+      'review',
+      'user'
+    ])
+    .getMany()
+    return {review, count:review.length}
+  }
+
   async findTopRated() {
     const products = await this.productModel
       .createQueryBuilder()

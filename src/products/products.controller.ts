@@ -39,6 +39,12 @@ export class ProductsController {
     return await this.productsService.recommender(dataFromPython, user)
   }
 
+
+  @Get(':id/review')
+  async showRating(@Param('id') id: string){
+    return await this.productsService.showRating(id)
+  }
+
   @Get('getFilterProducts')
   @UseInterceptors(ClassSerializerInterceptor)
   async getProducts(
