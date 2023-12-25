@@ -5,7 +5,6 @@ export class ReviewDto {
   @ApiProperty()
   @Min(1)
   @Max(5)
-  @IsNumber()
   rating: number;
 
   @ApiProperty()
