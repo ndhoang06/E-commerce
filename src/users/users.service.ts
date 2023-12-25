@@ -12,7 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import UserEntity from './user.entity';
 import { Repository } from 'typeorm';
 import { plainToClass } from 'class-transformer';
-import { UserDto } from './dtos/user.dto';
+import { UserDto, optionsUser } from './dtos/user.dto';
 
 @Injectable()
 export class UsersService {
@@ -42,9 +42,15 @@ export class UsersService {
     return plainToClass(UserDto, user);
   }
 
-  async findAll() {
-    const users = await this.userModel.find();
-    return users;
+  async findAll(optionsUser: optionsUser) {
+    const { limit = 10, page = 0 } = optionsUser;
+    const skip = page * limit;
+    const user = await this.userModel.createQueryBuilder('user')
+      .where('user.email LIKE :keyword', { keyword: `%${optionsUser.keyword}%` })
+      .skip(skip)
+      .take(limit)
+      .getManyAndCount()
+    return user;
   }
 
   async deleteOne(id: string): Promise<void> {
@@ -53,14 +59,14 @@ export class UsersService {
     await this.userModel.delete(id);
   }
 
-  async setRole(id,role:UserRole){
-    await this.userModel.update(id,{role})
+  async setRole(id, role: UserRole) {
+    await this.userModel.update(id, { role })
     return this.userModel.findOne({
-      where:{
+      where: {
         id
       }
     })
-  } 
+  }
 
   async update(
     id: string,

@@ -1,3 +1,4 @@
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
 
 export class UserDto {
@@ -7,4 +8,15 @@ export class UserDto {
   getFullName() {
     return this.firstName + ' ' + this.lastName;
   }
+}
+
+export class optionsUser {
+  @ApiPropertyOptional()
+  keyword?: string;
+  @ApiPropertyOptional()
+  size?: number;
+  @ApiPropertyOptional()
+  limit?: number;
+  @ApiPropertyOptional()
+  page?: number;
 }

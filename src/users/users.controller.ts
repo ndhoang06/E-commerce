@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Put,
+  Query,
   Req,
   UseGuards,
   UseInterceptors,
@@ -15,7 +16,7 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { RolesGuard } from 'src/guards/role.guard';
 import { UserRole } from './user.schema';
 import { ApiTags } from '@nestjs/swagger';
-import { UserDto } from './dtos/user.dto';
+import { UserDto, optionsUser } from './dtos/user.dto';
 
 @Controller('users')
 @ApiTags('User')
@@ -24,8 +25,14 @@ export class UsersController {
 
   @UseGuards(AuthGuard)
   @Get()
-  getUsers() {
-    return this.usersService.findAll();
+  async getUsers(@Query() optionsUser?:optionsUser) {
+    const [data, totalCount] = await this.usersService.findAll(optionsUser)
+    const totalPages = Math.ceil(totalCount / (optionsUser.size ?? 10));
+    return {
+      data,
+      totalPages,
+      totalCount,
+    }
   }
 
   @UseGuards(AuthGuard, RolesGuard)
