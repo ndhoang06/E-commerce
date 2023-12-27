@@ -205,66 +205,50 @@ export class ProductsService {
     }
   }
 
-  async update(
-    id: string,
-    attrs,
-    image: Express.Multer.File,
-    attachment: Express.Multer.File[],
-  ) {
-    let { name, price, description, category, countInStock, trademark, urls, promotion } =
-      attrs;
-
+  async update(id: string, attrs, image: Express.Multer.File, attachment: Express.Multer.File[]) {
+    const { name, price, description, category, countInStock, trademark, urls, promotion } = attrs;
     const product = await this.productModel.findOneBy({ id });
-    const category1 = await this.categoryModel.findOneBy({id:category})
-    const trademark1 = await this.tradeMarkModel.findOneBy({id:trademark})
-    const promotion1 = await this.promotionModel.findOneBy({id:promotion})
+  
     if (!product) throw new NotFoundException('No product with given ID.');
-
-    if (!image){
-      product.name = name;
-      product.price = price;
-      product.description = description;
-      product.trademark = trademark1;
-      product.category = category1;
-      product.countInStock = countInStock;
-      product.promotion = promotion1;
-      const updatedProduct = await this.productModel.save(product);
-      return updatedProduct;
-    } else {
-      if (image[0].mimetype.match('image')) {
-        await this.attachmentsService.update(id, urls)
-        await this.cloudinaryService.deleteFile(product.image)
-        const fileName = await this.cloudinaryService.uploadFile(image[0])
-        product.name = name;
-        product.price = price;
-        product.description = description;
+  
+    const category1 = await this.categoryModel.findOneBy({ id: category });
+    const trademark1 = await this.tradeMarkModel.findOneBy({ id: trademark });
+    const promotion1 = await this.promotionModel.findOneBy({ id: promotion });
+  
+    if (attachment && attachment.length > 0) {
+      await Promise.all(attachment.map(async attachments => {
+        if (attachments.mimetype.match('image')) {
+          await this.attachmentsService.create(attachments, id);
+        } else {
+          throw new Error('Please provide valid image attachments');
+        }
+      }));
+    }
+  
+    if (image) {
+      if (image[0]?.mimetype.match('image')) {
+        await this.attachmentsService.update(id, urls);
+        await this.cloudinaryService.deleteFile(product.image);
+        const fileName = await this.cloudinaryService.uploadFile(image[0]);
+  
         product.image = fileName;
-        product.trademark = trademark1;
-        product.category = category1;
-        product.countInStock = countInStock;
-        product.promotion = promotion1;
-        const updatedProduct = await this.productModel.save(product);
-        return updatedProduct;
       } else {
-        return 'Please image'
+        throw new Error('Please provide a valid image');
       }
     }
-    if(attachment){
-      if (attachment == undefined || attachment.length < 1) {
-
-      } else {
-        Promise.all(attachment.map(async attachments => {
-          if (attachments.mimetype.match('image')) {
-            return await this.attachmentsService.create(attachments, id)
-          } else {
-            return 'Please image'
-          }
-        }))
-      }
-    }
-   
+  
+    product.name = name;
+    product.price = price;
+    product.description = description;
+    product.trademark = trademark1;
+    product.category = category1;
+    product.countInStock = countInStock;
+    product.promotion = promotion1;
+  
+    const updatedProduct = await this.productModel.save(product);
+    return updatedProduct;
   }
-
+  
   async createReview(
     idProduct: string,
     user,
