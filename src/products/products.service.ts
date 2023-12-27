@@ -3,6 +3,7 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { Repository } from 'typeorm';
@@ -27,7 +28,7 @@ export class ProductsService {
     private readonly userModel: Repository<UserEntity>,
   ) { }
 
-  async recommender(dataFromPython,user) {
+  async recommender(dataFromPython, user) {
     return new Promise(async (resolve, reject) => {
       try {
         const recommendedProducts = [];
@@ -44,20 +45,20 @@ export class ProductsService {
         reject(error);
       }
     });
-    
+
   }
 
-  async showRating(id){
-    const review  = await this.reviewModel.createQueryBuilder('review')
-    .leftJoinAndSelect('review.user','user')
-    .leftJoinAndSelect('review.products','product')
-    .where('product.id =:id',{id})
-    .select([
-      'review',
-      'user'
-    ])
-    .getMany()
-    return {review, count:review.length}
+  async showRating(id) {
+    const review = await this.reviewModel.createQueryBuilder('review')
+      .leftJoinAndSelect('review.user', 'user')
+      .leftJoinAndSelect('review.products', 'product')
+      .where('product.id =:id', { id })
+      .select([
+        'review',
+        'user'
+      ])
+      .getMany()
+    return { review, count: review.length }
   }
 
   async findTopRated() {
@@ -104,11 +105,12 @@ export class ProductsService {
       .take(limit)
       .orderBy('products.rating', 'DESC')
       .addOrderBy('products.create_at', 'DESC')
-      .getMany()
-
+      .getManyAndCount()
+    console.log(products,'prodcutsstss')
     if (products.length < 0) throw new NotFoundException('No products found.');
-    const result = products.map(product => plainToClass(ProductShow, product));
-    const count: any = products.length
+    const result = products[0].map(product => plainToClass(ProductShow, product));
+    const count: any = products[1]
+    console.log('countttttttttt',count)
     return [result, count];
   }
 
@@ -202,46 +204,53 @@ export class ProductsService {
     image: Express.Multer.File,
     attachment: Express.Multer.File[],
   ) {
-    let { name, price, description, category, countInStock, trademark, urls, promotion } =
-      attrs;
-
-    const product = await this.productModel.findOneBy({ id });
-
-    if (!product) throw new NotFoundException('No product with given ID.');
-
-    if (image == undefined) {
-      return 'Need a image main'
-    }
-
-    if (image[0].mimetype.match('image')) {
-      if (attachment == undefined || attachment.length < 1) {
-
-      } else {
-        Promise.all(attachment.map(async attachments => {
-          if (attachments.mimetype.match('image')) {
-            return await this.attachmentsService.create(attachments, id)
-          } else {
-            return 'Please image'
-          }
-        }))
+    try {
+      let { name, price, description, category, countInStock, trademark, urls, promotion } =
+        attrs;
+  
+      const product = await this.productModel.findOneBy({ id });
+  
+      if (!product) {
+        throw new NotFoundException('No product with given ID.');
       }
-      await this.attachmentsService.update(id, urls)
-      await this.cloudinaryService.deleteFile(product.image)
-      const fileName = await this.cloudinaryService.uploadFile(image[0])
+  
+      if (image) {
+        if (!image[0].mimetype.match('image')) {
+          throw new Error('Please provide a valid image');
+        }
+  
+        await Promise.all(
+          attachment.map(async attachments => {
+            if (attachments.mimetype.match('image')) {
+              await this.attachmentsService.create(attachments, id);
+            } else {
+              throw new Error('Please provide valid image attachments');
+            }
+          })
+        );
+  
+        await this.attachmentsService.update(id, urls);
+        await this.cloudinaryService.deleteFile(product.image);
+        const fileName = await this.cloudinaryService.uploadFile(image[0]);
+        product.image = fileName;
+      }
+  
+      // Update other product attributes
       product.name = name;
       product.price = price;
       product.description = description;
-      product.image = fileName;
       product.trademark = trademark;
       product.category = category;
       product.countInStock = countInStock;
       product.promotion = promotion;
+  
       const updatedProduct = await this.productModel.save(product);
       return updatedProduct;
-    } else {
-      return 'Please image'
+    } catch (error) {
+      throw new InternalServerErrorException(error.message);
     }
   }
+  
 
   async createReview(
     idProduct: string,
