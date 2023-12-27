@@ -113,11 +113,11 @@ export class ProductsService {
       .take(limit)
       .orderBy('products.rating', 'DESC')
       .addOrderBy('products.create_at', 'DESC')
-      .getMany()
+      .getManyAndCount()
 
     if (products.length < 0) throw new NotFoundException('No products found.');
-    const result = products.map(product => plainToClass(ProductShow, product));
-    const count: any = products.length
+    const result = products[0].map(product => plainToClass(ProductShow, product));
+    const count: any = products[1]
     return [result, count];
   }
 
