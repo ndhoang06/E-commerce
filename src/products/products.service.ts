@@ -111,8 +111,8 @@ export class ProductsService {
       .leftJoinAndSelect('products.promotion', 'promotion')
       .skip(skip)
       .take(limit)
-      .orderBy('products.rating', 'DESC')
-      .addOrderBy('products.create_at', 'DESC')
+      .orderBy('products.create_at', 'DESC')
+      .addOrderBy('products.rating', 'DESC')
       .getManyAndCount()
 
     if (products.length < 0) throw new NotFoundException('No products found.');
