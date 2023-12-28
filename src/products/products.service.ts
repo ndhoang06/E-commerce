@@ -246,7 +246,15 @@ export class ProductsService {
     product.promotion = promotion1;
   
     const updatedProduct = await this.productModel.save(product);
-    return updatedProduct;
+    const result = await this.productModel.findOne({
+      where:{
+        id:updatedProduct.id
+      },
+      relations:{
+        attachments: true,
+      }
+    })
+    return result;
   }
   
   async createReview(
