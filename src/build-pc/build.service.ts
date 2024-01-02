@@ -105,7 +105,14 @@ export class BuildService {
     return `This action updates a #${id} build`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} build`;
+  async remove(keyword: string,user) {
+      const result = await this.buildRepository.query(
+        `UPDATE build
+        SET ${keyword} = NULL
+        FROM public."user_entity" u
+        WHERE build."userId" = u.id AND u.id = $1;
+        `,[user.id]
+      )
+      return result
   }
 }

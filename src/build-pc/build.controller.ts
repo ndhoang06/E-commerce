@@ -27,8 +27,10 @@ export class BuildController {
     return this.buildService.update(+id, updateBuildDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.buildService.remove(+id);
+  @Delete(':keyword')
+  @UseGuards(AuthGuard)
+  remove(@Param('keyword') keyword: string,@Req() req) {
+    const user = req.user
+    return this.buildService.remove(keyword,user);
   }
 }
