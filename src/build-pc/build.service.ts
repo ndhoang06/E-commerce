@@ -63,25 +63,25 @@ export class BuildService {
   }
 
   async findOne(user) {
-    const user1 = '8ae6d964-71e0-4557-a58a-aabb1280cb61'
+    const user1 = user.id
     const result = await this.buildRepository.query(`
-    SELECT 
+    SELECT
     JSONB_BUILD_OBJECT(
-      'cpu', JSONB_BUILD_OBJECT('id', p.id, 'name', p.name, 'image', p.image, 'price', p.price),
-      'mainboard', JSONB_BUILD_OBJECT('id', p1.id, 'name', p1.name, 'image', p1.image, 'price', p1.price),
-      'ram', JSONB_BUILD_OBJECT('id', p2.id, 'name', p2.name, 'image', p2.image, 'price', p2.price),
-      'hdd', JSONB_BUILD_OBJECT('id', p3.id, 'name', p3.name, 'image', p3.image, 'price', p3.price),
-      'ssd', JSONB_BUILD_OBJECT('id', p4.id, 'name', p4.name, 'image', p4.image, 'price', p4.price),
-      'vga', JSONB_BUILD_OBJECT('id', p5.id, 'name', p5.name, 'image', p5.image, 'price', p5.price),
-      'psu', JSONB_BUILD_OBJECT('id', p6.id, 'name', p6.name, 'image', p6.image, 'price', p6.price),
-      'case', JSONB_BUILD_OBJECT('id', p7.id, 'name', p7.name, 'image', p7.image, 'price', p7.price),
-      'monitor', JSONB_BUILD_OBJECT('id', p8.id, 'name', p8.name, 'image', p8.image, 'price', p8.price),
-      'keyboard', JSONB_BUILD_OBJECT('id', p9.id, 'name', p9.name, 'image', p9.image, 'price', p9.price),
-      'mouse', JSONB_BUILD_OBJECT('id', p10.id, 'name', p10.name, 'image', p10.image, 'price', p10.price),
-      'led', JSONB_BUILD_OBJECT('id', p11.id, 'name', p11.name, 'image', p11.image, 'price', p11.price),
-      'radiators', JSONB_BUILD_OBJECT('id', p12.id, 'name', p12.name, 'image', p12.image, 'price', p12.price)
+      'cpu', JSONB_BUILD_OBJECT('id', p.id, 'name', p.name, 'image', p.image, 'price', p.price, 'information', p.information),
+      'mainboard', JSONB_BUILD_OBJECT('id', p1.id, 'name', p1.name, 'image', p1.image, 'price', p1.price, 'information', p1.information ),
+      'ram', JSONB_BUILD_OBJECT('id', p2.id, 'name', p2.name, 'image', p2.image, 'price', p2.price, 'information', p2.information ),
+      'hdd', JSONB_BUILD_OBJECT('id', p3.id, 'name', p3.name, 'image', p3.image, 'price', p3.price, 'information', p3.information ),
+      'ssd', JSONB_BUILD_OBJECT('id', p4.id, 'name', p4.name, 'image', p4.image, 'price', p4.price, 'information', p4.information ),
+      'vga', JSONB_BUILD_OBJECT('id', p5.id, 'name', p5.name, 'image', p5.image, 'price', p5.price, 'information', p5.information ),
+      'psu', JSONB_BUILD_OBJECT('id', p6.id, 'name', p6.name, 'image', p6.image, 'price', p6.price, 'information', p6.information ),
+      'case', JSONB_BUILD_OBJECT('id', p7.id, 'name', p7.name, 'image', p7.image, 'price', p7.price, 'information', p7.information ),
+      'monitor', JSONB_BUILD_OBJECT('id', p8.id, 'name', p8.name, 'image', p8.image, 'price', p8.price, 'information', p8.information ),
+      'keyboard', JSONB_BUILD_OBJECT('id', p9.id, 'name', p9.name, 'image', p9.image, 'price', p9.price, 'information', p9.information ),
+      'mouse', JSONB_BUILD_OBJECT('id', p10.id, 'name', p10.name, 'image', p10.image, 'price', p10.price, 'information', p10.information ),
+      'led', JSONB_BUILD_OBJECT('id', p11.id, 'name', p11.name, 'image', p11.image, 'price', p11.price, 'information', p11.information ),
+      'radiators', JSONB_BUILD_OBJECT('id', p12.id, 'name', p12.name, 'image', p12.image, 'price', p12.price, 'information', p12.information )
     ) AS products,
-    u.*
+    TO_JSONB(u) AS user
     FROM public.build as b 
     LEFT JOIN public."product_entity" p ON b."cpu" = p.id
     LEFT JOIN public."product_entity" p1 ON b."mainboard" = p1.id
@@ -99,7 +99,7 @@ export class BuildService {
     JOIN public."user_entity" u ON b."userId" = u.id
     WHERE u.id = $1
 `, [user1]);
-    return result;
+    return result[0];
   }
   update(id: number, updateBuildDto: UpdateBuildDto) {
     return `This action updates a #${id} build`;
