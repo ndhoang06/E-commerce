@@ -96,7 +96,6 @@ export class PaymentService {
         res.on('end', () => {
           try {
             const data = JSON.parse(body);
-            console.log('data',data)
             if (data.payUrl) {
               resolve(data.payUrl);
             } else {

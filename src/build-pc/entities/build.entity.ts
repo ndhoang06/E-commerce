@@ -44,6 +44,45 @@ export class Build {
 
     @Column({ nullable: true,type:"uuid" })
     radiators: string
+    
+    @Column({ default: 1 })
+    qtycpu: number
+
+    @Column({ default: 1 })
+    qtymainboard: number
+
+    @Column({ default: 1 })
+    qtyram: number
+
+    @Column({ default: 1 })
+    qtyhdd: number
+
+    @Column({ default: 1 })
+    qtyssd: number
+
+    @Column({ default: 1 })
+    qtyvga: string
+
+    @Column({ default: 1 })
+    qtypsu: number
+
+    @Column({ default: 1 })
+    qtycase: number
+
+    @Column({ default: 1 })
+    qtymonitor: number
+
+    @Column({ default: 1 })
+    qtykeyboard: number
+
+    @Column({ default: 1 })
+    qtymouse: number
+
+    @Column({ default: 1 })
+    qtyled: number
+
+    @Column({ default: 1 })
+    qtyradiators: number
 
     @OneToOne(() => UserEntity, (user) => user.build)
     @JoinColumn()

@@ -22,9 +22,11 @@ export class BuildController {
     return this.buildService.findOne(user);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBuildDto: UpdateBuildDto) {
-    return this.buildService.update(+id, updateBuildDto);
+  @UseGuards(AuthGuard)
+  @Patch()
+  update(@Req() req, @Body() updateBuildDto: UpdateBuildDto) {
+    const user = req.user
+    return this.buildService.update(user, updateBuildDto);
   }
 
   @Delete(':keyword')

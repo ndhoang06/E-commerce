@@ -6,6 +6,7 @@ import {
 import { CartItem, ShippingDetails } from 'src/interfaces';
 import { ProductDocument } from 'src/products/product.schema';
 import { Cart } from './cart.schema';
+import { TypeCart, UpdateCartDto } from './dtos/add-to-cart.dto';
 
 interface AddCartItem {
   qty: number;
@@ -59,6 +60,20 @@ export class CartService {
   savePaymentMethod(paymentMethod: string): string {
     this.cart.paymentMethod = paymentMethod;
     return this.cart.paymentMethod;
+  }
+
+  async updateCart(updateCart: UpdateCartDto){
+    const cartItem = this.cart.cartItems.find(x => x.productId === updateCart.productId);
+    if(updateCart.type === TypeCart.ADD){
+      cartItem.qty += 1;
+    } else {
+      if(cartItem.qty === 1){
+         return await this.removeCartItem(updateCart.productId)
+      } else {
+        cartItem.qty -= 1;
+      }
+    }
+    return cartItem
   }
 
   removeCart():CartItem[]  {

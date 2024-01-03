@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Build } from './entities/build.entity';
 import { Repository } from 'typeorm';
 import UserEntity from 'src/users/user.entity';
+import { TypeCart } from 'src/cart/dtos/add-to-cart.dto';
 
 @Injectable()
 export class BuildService {
@@ -67,19 +68,19 @@ export class BuildService {
     const result = await this.buildRepository.query(`
     SELECT
     JSONB_BUILD_OBJECT(
-      'cpu', JSONB_BUILD_OBJECT('id', p.id, 'name', p.name, 'image', p.image, 'price', p.price, 'information', p.information),
-      'mainboard', JSONB_BUILD_OBJECT('id', p1.id, 'name', p1.name, 'image', p1.image, 'price', p1.price, 'information', p1.information ),
-      'ram', JSONB_BUILD_OBJECT('id', p2.id, 'name', p2.name, 'image', p2.image, 'price', p2.price, 'information', p2.information ),
-      'hdd', JSONB_BUILD_OBJECT('id', p3.id, 'name', p3.name, 'image', p3.image, 'price', p3.price, 'information', p3.information ),
-      'ssd', JSONB_BUILD_OBJECT('id', p4.id, 'name', p4.name, 'image', p4.image, 'price', p4.price, 'information', p4.information ),
-      'vga', JSONB_BUILD_OBJECT('id', p5.id, 'name', p5.name, 'image', p5.image, 'price', p5.price, 'information', p5.information ),
-      'psu', JSONB_BUILD_OBJECT('id', p6.id, 'name', p6.name, 'image', p6.image, 'price', p6.price, 'information', p6.information ),
-      'case', JSONB_BUILD_OBJECT('id', p7.id, 'name', p7.name, 'image', p7.image, 'price', p7.price, 'information', p7.information ),
-      'monitor', JSONB_BUILD_OBJECT('id', p8.id, 'name', p8.name, 'image', p8.image, 'price', p8.price, 'information', p8.information ),
-      'keyboard', JSONB_BUILD_OBJECT('id', p9.id, 'name', p9.name, 'image', p9.image, 'price', p9.price, 'information', p9.information ),
-      'mouse', JSONB_BUILD_OBJECT('id', p10.id, 'name', p10.name, 'image', p10.image, 'price', p10.price, 'information', p10.information ),
-      'led', JSONB_BUILD_OBJECT('id', p11.id, 'name', p11.name, 'image', p11.image, 'price', p11.price, 'information', p11.information ),
-      'radiators', JSONB_BUILD_OBJECT('id', p12.id, 'name', p12.name, 'image', p12.image, 'price', p12.price, 'information', p12.information )
+      'cpu', JSONB_BUILD_OBJECT('id', p.id, 'name', p.name, 'image', p.image, 'price', p.price, 'information', p.information, 'qty', b.qtycpu),
+      'mainboard', JSONB_BUILD_OBJECT('id', p1.id, 'name', p1.name, 'image', p1.image, 'price', p1.price, 'information', p1.information, 'qty', b.qtymainboard ),
+      'ram', JSONB_BUILD_OBJECT('id', p2.id, 'name', p2.name, 'image', p2.image, 'price', p2.price, 'information', p2.information, 'qty', b.qtyram ),
+      'hdd', JSONB_BUILD_OBJECT('id', p3.id, 'name', p3.name, 'image', p3.image, 'price', p3.price, 'information', p3.information, 'qty', b.qtyhdd ),
+      'ssd', JSONB_BUILD_OBJECT('id', p4.id, 'name', p4.name, 'image', p4.image, 'price', p4.price, 'information', p4.information, 'qty', b.qtyssd ),
+      'vga', JSONB_BUILD_OBJECT('id', p5.id, 'name', p5.name, 'image', p5.image, 'price', p5.price, 'information', p5.information, 'qty', b.qtyvga ),
+      'psu', JSONB_BUILD_OBJECT('id', p6.id, 'name', p6.name, 'image', p6.image, 'price', p6.price, 'information', p6.information, 'qty', b.qtypsu ),
+      'case', JSONB_BUILD_OBJECT('id', p7.id, 'name', p7.name, 'image', p7.image, 'price', p7.price, 'information', p7.information, 'qty', b.qtycase ),
+      'monitor', JSONB_BUILD_OBJECT('id', p8.id, 'name', p8.name, 'image', p8.image, 'price', p8.price, 'information', p8.information, 'qty', b.qtymonitor ),
+      'keyboard', JSONB_BUILD_OBJECT('id', p9.id, 'name', p9.name, 'image', p9.image, 'price', p9.price, 'information', p9.information, 'qty', b.qtykeyboard ),
+      'mouse', JSONB_BUILD_OBJECT('id', p10.id, 'name', p10.name, 'image', p10.image, 'price', p10.price, 'information', p10.information, 'qty', b.qtymouse ),
+      'led', JSONB_BUILD_OBJECT('id', p11.id, 'name', p11.name, 'image', p11.image, 'price', p11.price, 'information', p11.information, 'qty', b.qtyled ),
+      'radiators', JSONB_BUILD_OBJECT('id', p12.id, 'name', p12.name, 'image', p12.image, 'price', p12.price, 'information', p12.information, 'qty', b.qtyradiators )
     ) AS products,
     TO_JSONB(u) AS user
     FROM public.build as b 
@@ -101,8 +102,24 @@ export class BuildService {
 `, [user1]);
     return result[0];
   }
-  update(id: number, updateBuildDto: UpdateBuildDto) {
-    return `This action updates a #${id} build`;
+  async update(user,updateBuildDto: UpdateBuildDto) {
+    if(updateBuildDto.type === TypeCart.ADD){
+      return await this.buildRepository.query(
+        `UPDATE build
+          SET qty${updateBuildDto.parts} = qty${updateBuildDto.parts} + 1
+          FROM public."user_entity" u
+          WHERE build."userId" = u.id AND u.id = $1;
+        `,[user.id]
+      )
+    }else {
+      return await this.buildRepository.query(
+        `UPDATE build
+          SET qty${updateBuildDto.parts} = qty${updateBuildDto.parts} - 1
+          FROM public."user_entity" u
+          WHERE build."userId" = u.id AND u.id = $1;
+        `,[user.id]
+      )
+    }
   }
 
   async remove(keyword: string,user) {
