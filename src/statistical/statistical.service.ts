@@ -70,6 +70,9 @@ export class StatisticalService {
   async statisticalUsers(query) {
     const startDate = new Date(query?.startDate);
     const endDate = new Date(query?.endDate);
+    const selectedYear = query?.year || new Date().getFullYear(); // Lấy năm từ query, nếu không có thì lấy năm hiện tại
+    const startOfYear = new Date(`${selectedYear}-01-01`);
+    const endOfYear = new Date(`${selectedYear}-12-31`);
     const user = await this.userRepository.createQueryBuilder('user')
     if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
         user.andWhere('user.createdTimestamp >= :startDate', { startDate: startDate.getTime() })
@@ -77,7 +80,10 @@ export class StatisticalService {
       const result = await user.getMany()
       return { count: result.length }
     }else {
-      const users = await user.getMany()
+      const users = await user
+            .andWhere('user.createdTimestamp >= :startOfYear', { startOfYear: startOfYear.getTime() })
+            .andWhere('user.createdTimestamp <= :endOfYear', { endOfYear: endOfYear.getTime() })
+            .getMany();
       const monthlyCount = Array.from({ length: 12 }, (_, month) => ({ month: month + 1, count: 0 }));
   // Tính toán số lượng user được tạo trong mỗi tháng
   users.forEach(user => {

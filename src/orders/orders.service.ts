@@ -159,6 +159,7 @@ export class OrdersService {
     order.isDelivered = true;
     order.deliveredAt = Date();
     order.status = Status.DONE
+    await this.paymentService.handleQuantiy(id)
     const updatedOrder = await this.orderModel.save(order);
 
     return updatedOrder;

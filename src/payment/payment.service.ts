@@ -162,9 +162,12 @@ export class PaymentService {
     return vnpUrl
   }
 
+async changeStatusPayment(id:number) {
+  await this.oderRepository.update(id, {status: Status.PAYMENT })
+}
+
   async handleQuantiy(id: number) {
     const checkOrder = await this.oderRepository.findOneBy({ id })
-    checkOrder.status = Status.PAYMENT
     const result = await Promise.all(
       checkOrder.orderItems.map(async (item) => {
         const product = await this.productRepository.findOneBy({ id: item.productId })

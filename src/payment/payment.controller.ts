@@ -11,7 +11,7 @@ export class PaymentController {
   async vnpay_return(@Req() req, @Res() res, @Param('id') id: any) {
     const result = await this.paymentService.vnpay_return(req)
     if (result.code == '00') {
-      await this.paymentService.handleQuantiy(id)
+      await this.paymentService.changeStatusPayment(id)
       res.redirect('http://localhost:8080/payment-success');
     } else {
       res.redirect('http://localhost:8080/payment-error');
