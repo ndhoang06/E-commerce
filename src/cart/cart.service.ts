@@ -28,28 +28,23 @@ export class CartService {
         image,
         price,
         countInStock,
-        qty,
+        qty:1,
       };
+      const existingItemIndex = this.cart.cartItems.findIndex(
+        x => x.productId === product.id
+    );
 
-      const itemExists = this.cart.cartItems.find(
-        x => x.productId === product._id
-      );
-
-      if (itemExists) {
-        this.cart.cartItems = this.cart.cartItems.map(x =>
-          x.productId === itemExists.productId ? cartItem : x
-        );
-
-        return cartItem;
-      } else {
-        this.cart.cartItems.push(cartItem);
-
-        return cartItem;
-      }
+    if (existingItemIndex !== -1) {
+      this.cart.cartItems[existingItemIndex].qty += 1;
+      return this.cart.cartItems[existingItemIndex];
+  } else {
+      this.cart.cartItems.push(cartItem);
+      return cartItem;
+  }
     } else {
       const cartItem = this.cart.cartItems.find(x => x.productId === productId);
 
-      cartItem.qty = qty;
+      cartItem.qty = qty + 1;
 
       return cartItem;
     }
