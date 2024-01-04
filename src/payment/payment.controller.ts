@@ -1,17 +1,27 @@
 import { Controller, Get, Param, Post, Req, Res } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { ApiTags } from '@nestjs/swagger';
+import { PublicService } from 'src/public/public.service';
+import { ContentEmail } from 'src/public/public.dto';
 
 @ApiTags('Payment')
 @Controller('payment')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) { }
+  constructor(
+    private readonly paymentService: PaymentService,
+    private readonly publicService: PublicService,) { }
 
   @Get('vnpay_return/:id')
   async vnpay_return(@Req() req, @Res() res, @Param('id') id: any) {
     const result = await this.paymentService.vnpay_return(req)
     if (result.code == '00') {
       await this.paymentService.changeStatusPayment(id)
+      // const contentEmail = new ContentEmail();
+      // contentEmail.subject = `Bạn vừa đặt hàng thành công với #${id}`;
+      // contentEmail.content = `Bạn vừa đặt hàng thành công với #${id}`;
+      // // tìm người đặt theo id order
+      // contentEmail.to = [''] 
+      // await this.publicService.sendEmail(contentEmail)
       res.redirect('http://localhost:8080/payment-success');
     } else {
       res.redirect('http://localhost:8080/payment-error');

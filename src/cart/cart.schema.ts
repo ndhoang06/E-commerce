@@ -1,4 +1,5 @@
 import { CartItem, ShippingDetails } from 'src/interfaces';
+import { paymentMethod } from 'src/orders/order.entity';
 
 export interface CartInterface {
   cartItems: CartItem[];
@@ -15,7 +16,7 @@ export const defaultCart = {
     country: '',
     phone: 0
   },
-  paymentMethod: 'Cash',
+  paymentMethod: paymentMethod.CASH,
 };
 
 export class Cart {

@@ -45,7 +45,7 @@ export class OrderEntity {
     @Column({ nullable: true, type: 'jsonb', })
     shippingDetails: ShippingDetails[]
 
-    @Column({ nullable: false })
+    @Column({ nullable: false, default: paymentMethod.CASH })
     paymentMethod: paymentMethod;
 
     @Column({ nullable: false, default: 0.0 })

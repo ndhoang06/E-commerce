@@ -14,7 +14,7 @@ async function bootstrap() {
   // app.set('trust proxy', 1); // trust first proxy
   app.enableCors({
     origin: ['http://localhost:8080'],
-    methods: ['POST', 'GET', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: ['POST', 'GET', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
   });
   // app.use(session(sessionConfig(MongoDBStore)));

@@ -17,7 +17,7 @@ export const connectDB = (
 
 export const corsConfig = (): CorsOptions => ({
   origin: process.env.CLIENT_URL,
-  methods: 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
+  methods: '*',
   credentials: true,
 });
 

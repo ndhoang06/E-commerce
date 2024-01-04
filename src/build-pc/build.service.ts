@@ -26,6 +26,19 @@ export class BuildService {
     if (!checkExist) {
       const newBuild = await this.buildRepository.create({
         ...createBuildDto,
+        qtycpu: createBuildDto.cpu ? 1 : null,
+        qtymainboard: createBuildDto.mainboard ? 1 : null,
+        qtyram: createBuildDto.ram ? 1 : null,
+        qtyhdd: createBuildDto.hdd ? 1 : null,
+        qtyssd: createBuildDto.ssd ? 1 : null,
+        qtyvga: createBuildDto.vga ? 1 : null,
+        qtypsu: createBuildDto.psu ? 1 : null,
+        qtycase: createBuildDto.case ? 1 : null,
+        qtymonitor: createBuildDto.monitor ? 1 : null,
+        qtykeyboard: createBuildDto.keyboard ? 1 : null,
+        qtymouse: createBuildDto.mouse ? 1 : null,
+        qtyled: createBuildDto.led ? 1 : null,
+        qtyradiators: createBuildDto.radiators ? 1 : null,
         user: checkUser
       })
       await this.buildRepository.save(newBuild);
@@ -102,34 +115,34 @@ export class BuildService {
 `, [user1]);
     return result[0];
   }
-  async update(user,updateBuildDto: UpdateBuildDto) {
-    if(updateBuildDto.type === TypeCart.ADD){
+  async update(user, updateBuildDto: UpdateBuildDto) {
+    if (updateBuildDto.type === TypeCart.ADD) {
       return await this.buildRepository.query(
         `UPDATE build
           SET qty${updateBuildDto.parts} = qty${updateBuildDto.parts} + 1
           FROM public."user_entity" u
           WHERE build."userId" = u.id AND u.id = $1;
-        `,[user.id]
+        `, [user.id]
       )
-    }else {
+    } else {
       return await this.buildRepository.query(
         `UPDATE build
           SET qty${updateBuildDto.parts} = qty${updateBuildDto.parts} - 1
           FROM public."user_entity" u
           WHERE build."userId" = u.id AND u.id = $1;
-        `,[user.id]
+        `, [user.id]
       )
     }
   }
 
-  async remove(keyword: string,user) {
-      const result = await this.buildRepository.query(
-        `UPDATE build
+  async remove(keyword: string, user) {
+    const result = await this.buildRepository.query(
+      `UPDATE build
         SET ${keyword} = NULL
         FROM public."user_entity" u
         WHERE build."userId" = u.id AND u.id = $1;
-        `,[user.id]
-      )
-      return result
+        `, [user.id]
+    )
+    return result
   }
 }
