@@ -119,7 +119,11 @@ export class BuildService {
     if (updateBuildDto.type === TypeCart.ADD) {
       return await this.buildRepository.query(
         `UPDATE build
-          SET qty${updateBuildDto.parts} = qty${updateBuildDto.parts} + 1
+          SET qty${updateBuildDto.parts} = 
+          CASE 
+            WHEN qty${updateBuildDto.parts} IS NULL THEN 1
+            ELSE qty${updateBuildDto.parts} + 1
+          END
           FROM public."user_entity" u
           WHERE build."userId" = u.id AND u.id = $1;
         `, [user.id]
@@ -138,7 +142,8 @@ export class BuildService {
   async remove(keyword: string, user) {
     const result = await this.buildRepository.query(
       `UPDATE build
-        SET ${keyword} = NULL
+        SET ${keyword} = NULL,
+            qty${keyword} = NULL
         FROM public."user_entity" u
         WHERE build."userId" = u.id AND u.id = $1;
         `, [user.id]
