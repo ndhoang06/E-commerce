@@ -1,5 +1,8 @@
 import {
   BadRequestException,
+  HttpCode,
+  HttpException,
+  HttpStatus,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -144,18 +147,27 @@ export class OrdersService {
   ) {
     const order = await this.orderModel.findOneBy({ id });
     if (!order) throw new NotFoundException('No order with given ID.');
-    order.isPaid = true;
-    order.paidAt = Date();
-    order.status = Status.PAYMENT;
-    // order.paymentResult = paymentResult;
-    return await this.orderModel.save(order);
+    if(order.status === Status.SHIPPING || 
+      order.status === Status.DONE ||
+      order.status === Status.CANCEL
+    ){
+      throw new HttpException(`Cannot change status`, HttpStatus.BAD_REQUEST)
+    }else {
+      order.isPaid = true;
+      order.paidAt = Date();
+      order.status = Status.PAYMENT;
+      // order.paymentResult = paymentResult;
+      return await this.orderModel.save(order);
+    }
   }
 
   async updateDelivered(id: number) {
     const order = await this.orderModel.findOneBy({ id });
 
     if (!order) throw new NotFoundException('No order with given ID.');
-
+    if(order.status === Status.CANCEL){
+      throw new HttpException('Cannot change status', HttpStatus.BAD_GATEWAY)
+    }
     order.isDelivered = true;
     order.deliveredAt = Date();
     order.status = Status.DONE
@@ -204,7 +216,13 @@ export class OrdersService {
     return result
   }
 
-  cancelOrder(id, user) {
+  async cancelOrder(id, user) {
+    const checkOrder = await this.orderModel.findOne({
+      where:{id}
+    })
+    if(checkOrder.status === Status.DONE){
+      throw new HttpException('Cannot change status',HttpStatus.BAD_REQUEST)
+    }
     return this.orderModel.createQueryBuilder()
       .update(OrderEntity)
       .set({ status: Status.CANCEL })
@@ -214,7 +232,44 @@ export class OrdersService {
       .execute()
   }
 
-  updateStatus(id, status: Status) {
+  async updateStatus(id, status: Status) {
+    const checkOrder = await this.orderModel.findOne({
+      where:{id}
+    })
+    if(status === Status.PENDING){
+        throw new HttpException("cannot change status",HttpStatus.BAD_REQUEST)
+    }
+    if(status === Status.PROCESSING){
+      if(checkOrder.status === Status.PENDING){
+        return this.orderModel.createQueryBuilder()
+        .update(OrderEntity)
+        .set({ status: status })
+        .where('id=:id', { id })
+        .execute()    
+      }else {
+        throw new HttpException("cannot change status",HttpStatus.BAD_REQUEST)
+      }
+    }else if(status === Status.SHIPPING){
+      if(checkOrder.status === Status.PENDING || checkOrder.status === Status.PROCESSING ){
+        return this.orderModel.createQueryBuilder()
+        .update(OrderEntity)
+        .set({ status: status })
+        .where('id=:id', { id })
+        .execute()    
+      } else {
+        throw new HttpException("cannot change status",HttpStatus.BAD_REQUEST)
+      }
+    }else if(status === Status.CANCEL){
+      if(checkOrder.status === Status.DONE ){
+        throw new HttpException("cannot change status",HttpStatus.BAD_REQUEST)
+      } else {
+        return this.orderModel.createQueryBuilder()
+        .update(OrderEntity)
+        .set({ status: status })
+        .where('id=:id', { id })
+        .execute()
+      }
+    }
     return this.orderModel.createQueryBuilder()
       .update(OrderEntity)
       .set({ status: status })

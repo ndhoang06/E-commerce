@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import * as moment from 'moment';
 let querystring = require('qs');
 import * as crypto from 'crypto';
@@ -162,7 +162,17 @@ export class PaymentService {
   }
 
 async changeStatusPayment(id:number) {
-  await this.oderRepository.update(id, {status: Status.PAYMENT })
+    const checkOrder = await this.oderRepository.findOne({
+      where: {id}
+    })
+    if(checkOrder.status === Status.SHIPPING || 
+      checkOrder.status === Status.DONE ||
+      checkOrder.status === Status.CANCEL
+    ){
+      throw new HttpException(`Cannot change status`, HttpStatus.BAD_REQUEST)
+    }else {
+      await this.oderRepository.update(id, {status: Status.PAYMENT })
+    }
 }
 
   async handleQuantiy(id: number) {
