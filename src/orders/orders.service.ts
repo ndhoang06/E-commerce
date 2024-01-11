@@ -53,7 +53,7 @@ export class OrdersService {
         }
       })
       if (product.countInStock < item.qty) {
-        throw new BadRequestException('The product is no longer in stock.');
+        throw new HttpException('The product is no longer in stock.',HttpStatus.CONFLICT);
       }
     }
     const createdOrder = await this.orderModel.save({
