@@ -1,6 +1,5 @@
 import {
   BadRequestException,
-  HttpCode,
   HttpException,
   HttpStatus,
   Injectable,
@@ -13,6 +12,8 @@ import { OrderEntity, Status } from './order.entity';
 import UserEntity from 'src/users/user.entity';
 import ProductEntity from 'src/products/product.entity';
 import { PaymentService } from 'src/payment/payment.service';
+import { PublicService } from 'src/public/public.service';
+import { ContentEmail } from 'src/public/public.dto';
 
 @Injectable()
 export class OrdersService {
@@ -23,7 +24,8 @@ export class OrdersService {
     private readonly userModel: Repository<UserEntity>,
     @InjectRepository(ProductEntity)
     private readonly productModel: Repository<ProductEntity>,
-    private readonly paymentService: PaymentService
+    private readonly paymentService: PaymentService,
+    private readonly publicService: PublicService
   ) { }
 
   async create(
@@ -44,7 +46,16 @@ export class OrdersService {
       throw new BadRequestException('No order items received.');
 
     const user = await this.userModel.findOneBy({ id: userId })
-
+    for (const item of orderItems){
+      const product = await this.productModel.findOne({
+        where: {
+          id: item.productId
+        }
+      })
+      if(product.countInStock < item.qty){
+        throw new BadRequestException('The product is no longer in stock.');
+      }
+    }
     const createdOrder = await this.orderModel.save({
       user: user,
       orderItems,
@@ -56,7 +67,13 @@ export class OrdersService {
       totalPrice,
       status: Status.PENDING
     });
-
+      const contentEmail = new ContentEmail();
+      contentEmail.subject = `Bạn vừa đặt hàng thành công với #${createdOrder.id}`;
+      contentEmail.content = `
+        Bạn vừa đặt hàng thành công với #${createdOrder.id} <br>
+        `;
+      contentEmail.to = [createdOrder.user.email] 
+      await this.publicService.sendEmail(contentEmail)
     return createdOrder;
   }
 
@@ -263,6 +280,18 @@ export class OrdersService {
       if(checkOrder.status === Status.DONE ){
         throw new HttpException("cannot change status",HttpStatus.BAD_REQUEST)
       } else {
+        for(const item of checkOrder.orderItems){
+          const product = await this.productModel.findOne({
+            where: {
+              id: item.productId
+            }
+          })
+          await this.productModel.query(`
+          UPDATE product_entity
+          SET "countInStock" = ${product.countInStock} + ${item.qty}
+          WHERE id = $1
+        `,[item.productId])
+        }
         return this.orderModel.createQueryBuilder()
         .update(OrderEntity)
         .set({ status: status })

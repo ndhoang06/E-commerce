@@ -27,4 +27,7 @@ export class UpdateCartDto {
   @IsOptional()
   @IsString()
   productId?: string;
+
+  @ApiPropertyOptional()
+  qty: number
 }

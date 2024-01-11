@@ -18,6 +18,22 @@ interface AddCartItem {
 export class CartService {
   cart = new Cart().cart;
 
+  // addCartItem(user, { qty, productId, product }: AddCartItem) {
+  //   if (!productId && !product)
+  //     throw new BadRequestException('No id or product provided.');
+  //   if (product) {
+  //     const { name, image, price, _id, countInStock } = product;
+  //     const cartItem = {
+  //       productId: productId,
+  //       name,
+  //       image,
+  //       price,
+  //       countInStock,
+  //       qty: 1,
+  //     };
+  //   }
+  // }
+
   addCartItem({ qty, productId, product }: AddCartItem): CartItem {
     if (!productId && !product)
       throw new BadRequestException('No id or product provided.');
@@ -62,13 +78,13 @@ export class CartService {
     return this.cart.paymentMethod;
   }
 
-  async updateCart(updateCart: UpdateCartDto){
+  async updateCart(updateCart: UpdateCartDto) {
     const cartItem = this.cart.cartItems.find(x => x.productId === updateCart.productId);
-    if(updateCart.type === TypeCart.ADD){
+    if (updateCart.type === TypeCart.ADD) {
       cartItem.qty += 1;
     } else {
-      if(cartItem.qty === 1){
-         return await this.removeCartItem(updateCart.productId)
+      if (cartItem.qty === 1) {
+        return await this.removeCartItem(updateCart.productId)
       } else {
         cartItem.qty -= 1;
       }
@@ -76,7 +92,13 @@ export class CartService {
     return cartItem
   }
 
-  removeCart():CartItem[]  {
+  async updateQuantity(updateCart: UpdateCartDto) {
+    const cartItem = this.cart.cartItems.find(x => x.productId === updateCart.productId);
+      cartItem.qty = updateCart.qty;
+    return cartItem
+  }
+
+  removeCart(): CartItem[] {
     return this.cart.cartItems = [];
   }
 

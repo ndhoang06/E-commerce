@@ -6,7 +6,9 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   Session,
+  UseGuards,
 } from '@nestjs/common';
 import { AddToCartDto, UpdateCartDto } from './dtos/add-to-cart.dto';
 import { SaveShippingDetailsDto } from './dtos/save-shipping-details.dto';
@@ -14,18 +16,25 @@ import { CartService } from './cart.service';
 import { defaultCart } from './cart.schema';
 import { SavePaymentMethodDto } from './dtos/save-payment-method.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from 'src/auth/auth.guard';
 
 @Controller('cart')
 @ApiTags('Cart')
 export class CartController {
   constructor(private cartService: CartService) { }
 
+  @UseGuards(AuthGuard)
   @Post()
-  addToCart(@Body() body: AddToCartDto, @Session() session: any) {
+  async addToCart(@Req() req, @Body() body: AddToCartDto,
+  @Session() session: any
+  ) {
     this.cartService.cart = session.cart ? session.cart : defaultCart;
     const cartItem = this.cartService.addCartItem({ ...body });
     session.cart = this.cartService.cart;
     return cartItem;
+    // const user = req.user
+    // const cartItem = await this.cartService.addCartItem(user,{ ...body })
+    // return cartItem;
   }
 
   @Post('shipping')
@@ -64,6 +73,14 @@ export class CartController {
     // const cartItem = this.cartService.updateCart();
     // session.cart = this.cartService.cart;
     // return cartItem;
+    const cart = session.cart ? session.cart : defaultCart
+    const cartItem = this.cartService.updateCart(updateCart);
+    session.cart = this.cartService.cart;
+    return cartItem;
+  }
+
+  @Patch('qty')
+  async updateQuantity(@Session() session: any, @Body() updateCart: UpdateCartDto) {
     const cart = session.cart ? session.cart : defaultCart
     const cartItem = this.cartService.updateCart(updateCart);
     session.cart = this.cartService.cart;
