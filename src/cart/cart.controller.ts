@@ -82,7 +82,7 @@ export class CartController {
   @Patch('qty')
   async updateQuantity(@Session() session: any, @Body() updateCart: UpdateCartDto) {
     const cart = session.cart ? session.cart : defaultCart
-    const cartItem = this.cartService.updateCart(updateCart);
+    const cartItem = this.cartService.updateQuantity(updateCart);
     session.cart = this.cartService.cart;
     return cartItem;
   }

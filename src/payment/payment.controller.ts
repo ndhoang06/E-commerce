@@ -16,12 +16,6 @@ export class PaymentController {
     const result = await this.paymentService.vnpay_return(req)
     if (result.code == '00') {
       await this.paymentService.changeStatusPayment(id)
-      // const contentEmail = new ContentEmail();
-      // contentEmail.subject = `Bạn vừa đặt hàng thành công với #${id}`;
-      // contentEmail.content = `Bạn vừa đặt hàng thành công với #${id}`;
-      // // tìm người đặt theo id order
-      // contentEmail.to = [''] 
-      // await this.publicService.sendEmail(contentEmail)
       res.redirect('http://localhost:8080/payment-success');
     } else {
       res.redirect('http://localhost:8080/payment-error');

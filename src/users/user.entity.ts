@@ -1,4 +1,5 @@
 import { Build } from 'src/build-pc/entities/build.entity';
+import CartEntity from 'src/cart/cart.entity';
 import { OrderEntity } from 'src/orders/order.entity';
 import { Review } from 'src/products/product.entity';
 import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
@@ -39,6 +40,9 @@ class UserEntity {
 
     @OneToOne(() => Build, (build) => build.user)
     build: Build;
+
+    @OneToMany(() => CartEntity, (cart) => cart.user)
+    cart: CartEntity[]
 
     @Column({ type: "decimal", default: Date.now() })
     createdTimestamp: number;

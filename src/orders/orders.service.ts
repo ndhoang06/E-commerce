@@ -46,13 +46,13 @@ export class OrdersService {
       throw new BadRequestException('No order items received.');
 
     const user = await this.userModel.findOneBy({ id: userId })
-    for (const item of orderItems){
+    for (const item of orderItems) {
       const product = await this.productModel.findOne({
         where: {
           id: item.productId
         }
       })
-      if(product.countInStock < item.qty){
+      if (product.countInStock < item.qty) {
         throw new BadRequestException('The product is no longer in stock.');
       }
     }
@@ -67,20 +67,21 @@ export class OrdersService {
       totalPrice,
       status: Status.PENDING
     });
-      const contentEmail = new ContentEmail();
-      contentEmail.subject = `Bạn vừa đặt hàng thành công với #${createdOrder.id}`;
-      contentEmail.content = `
+    await this.paymentService.handleQuantiy(createdOrder.id)
+    const contentEmail = new ContentEmail();
+    contentEmail.subject = `Bạn vừa đặt hàng thành công với #${createdOrder.id}`;
+    contentEmail.content = `
         Bạn vừa đặt hàng thành công với #${createdOrder.id} <br>
         `;
-      contentEmail.to = [createdOrder.user.email] 
-      await this.publicService.sendEmail(contentEmail)
+    contentEmail.to = [createdOrder.user.email]
+    await this.publicService.sendEmail(contentEmail)
     return createdOrder;
   }
 
   async findAll(status) {
     const orders = await this.orderModel.find({
-      where:{
-        status:status,
+      where: {
+        status: status,
       },
       relations: {
         user: true,
@@ -164,12 +165,12 @@ export class OrdersService {
   ) {
     const order = await this.orderModel.findOneBy({ id });
     if (!order) throw new NotFoundException('No order with given ID.');
-    if(order.status === Status.SHIPPING || 
+    if (order.status === Status.SHIPPING ||
       order.status === Status.DONE ||
       order.status === Status.CANCEL
-    ){
+    ) {
       throw new HttpException(`Cannot change status`, HttpStatus.BAD_REQUEST)
-    }else {
+    } else {
       order.isPaid = true;
       order.paidAt = Date();
       order.status = Status.PAYMENT;
@@ -182,13 +183,12 @@ export class OrdersService {
     const order = await this.orderModel.findOneBy({ id });
 
     if (!order) throw new NotFoundException('No order with given ID.');
-    if(order.status === Status.CANCEL){
+    if (order.status === Status.CANCEL) {
       throw new HttpException('Cannot change status', HttpStatus.BAD_GATEWAY)
     }
     order.isDelivered = true;
     order.deliveredAt = Date();
     order.status = Status.DONE
-    await this.paymentService.handleQuantiy(id)
     const updatedOrder = await this.orderModel.save(order);
 
     return updatedOrder;
@@ -235,10 +235,10 @@ export class OrdersService {
 
   async cancelOrder(id, user) {
     const checkOrder = await this.orderModel.findOne({
-      where:{id}
+      where: { id }
     })
-    if(checkOrder.status === Status.DONE){
-      throw new HttpException('Cannot change status',HttpStatus.BAD_REQUEST)
+    if (checkOrder.status === Status.DONE) {
+      throw new HttpException('Cannot change status', HttpStatus.BAD_REQUEST)
     }
     return this.orderModel.createQueryBuilder()
       .update(OrderEntity)
@@ -251,36 +251,36 @@ export class OrdersService {
 
   async updateStatus(id, status: Status) {
     const checkOrder = await this.orderModel.findOne({
-      where:{id}
+      where: { id }
     })
-    if(status === Status.PENDING){
-        throw new HttpException("cannot change status",HttpStatus.BAD_REQUEST)
+    if (status === Status.PENDING) {
+      throw new HttpException("cannot change status", HttpStatus.BAD_REQUEST)
     }
-    if(status === Status.PROCESSING){
-      if(checkOrder.status === Status.PENDING){
+    if (status === Status.PROCESSING) {
+      if (checkOrder.status === Status.PENDING) {
         return this.orderModel.createQueryBuilder()
-        .update(OrderEntity)
-        .set({ status: status })
-        .where('id=:id', { id })
-        .execute()    
-      }else {
-        throw new HttpException("cannot change status",HttpStatus.BAD_REQUEST)
+          .update(OrderEntity)
+          .set({ status: status })
+          .where('id=:id', { id })
+          .execute()
+      } else {
+        throw new HttpException("cannot change status", HttpStatus.BAD_REQUEST)
       }
-    }else if(status === Status.SHIPPING){
-      if(checkOrder.status === Status.PENDING || checkOrder.status === Status.PROCESSING ){
+    } else if (status === Status.SHIPPING) {
+      if (checkOrder.status === Status.PENDING || checkOrder.status === Status.PROCESSING) {
         return this.orderModel.createQueryBuilder()
-        .update(OrderEntity)
-        .set({ status: status })
-        .where('id=:id', { id })
-        .execute()    
+          .update(OrderEntity)
+          .set({ status: status })
+          .where('id=:id', { id })
+          .execute()
       } else {
-        throw new HttpException("cannot change status",HttpStatus.BAD_REQUEST)
+        throw new HttpException("cannot change status", HttpStatus.BAD_REQUEST)
       }
-    }else if(status === Status.CANCEL){
-      if(checkOrder.status === Status.DONE ){
-        throw new HttpException("cannot change status",HttpStatus.BAD_REQUEST)
+    } else if (status === Status.CANCEL) {
+      if (checkOrder.status === Status.DONE) {
+        throw new HttpException("cannot change status", HttpStatus.BAD_REQUEST)
       } else {
-        for(const item of checkOrder.orderItems){
+        for (const item of checkOrder.orderItems) {
           const product = await this.productModel.findOne({
             where: {
               id: item.productId
@@ -290,13 +290,13 @@ export class OrdersService {
           UPDATE product_entity
           SET "countInStock" = ${product.countInStock} + ${item.qty}
           WHERE id = $1
-        `,[item.productId])
+        `, [item.productId])
         }
         return this.orderModel.createQueryBuilder()
-        .update(OrderEntity)
-        .set({ status: status })
-        .where('id=:id', { id })
-        .execute()
+          .update(OrderEntity)
+          .set({ status: status })
+          .where('id=:id', { id })
+          .execute()
       }
     }
     return this.orderModel.createQueryBuilder()
@@ -306,7 +306,7 @@ export class OrdersService {
       .execute()
   }
 
-  removeOrder(id,req){
+  removeOrder(id, req) {
     return this.orderModel.delete(id)
   }
 }

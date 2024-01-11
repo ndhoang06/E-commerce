@@ -28,6 +28,12 @@ import axios from 'axios';
 export class ProductsController {
   constructor(private productsService: ProductsService) { }
 
+  @Get('test-recommend')
+  testRecommend(@Req() req) {
+    const user = req.user
+    return this.productsService.recommenderTest();
+  }
+
   @UseInterceptors(ClassSerializerInterceptor)
   @UseGuards(AuthGuard)
   @Get('recommender')

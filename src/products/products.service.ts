@@ -16,6 +16,8 @@ import { optionsProduct } from './product.dto';
 import CategoryEntity from 'src/categories/categories.entity';
 import { Promotion } from 'src/promotion/entities/promotion.entity';
 import TrademarkEntity from 'src/trademark/trademark.entity';
+import * as tf from '@tensorflow/tfjs';
+
 
 @Injectable()
 export class ProductsService {
@@ -36,7 +38,88 @@ export class ProductsService {
     private readonly promotionModel: Repository<Promotion>,
   ) { }
 
-  async recommender(dataFromPython,user) {
+  async recommenderTest() {
+    const ratingsData = await this.reviewModel.find({
+      relations: {
+        user: true,
+        products: true
+      }
+    })
+    const uniqueUserIds = [...new Set(ratingsData.map(entry => entry.user.id))];
+    const uniqueProductIds = [...new Set(ratingsData.map(entry => entry.products.id))];
+
+    // Create a mapping from userId and productId to an index
+    const userIdToIndex = new Map(uniqueUserIds.map((id, index) => [id, index]));
+    const productIdToIndex = new Map(uniqueProductIds.map((id, index) => [id, index]));
+
+    const userArray = ratingsData.map(entry => userIdToIndex.get(entry.user.id));
+    const productArray = ratingsData.map(entry => productIdToIndex.get(entry.products.id));
+    const ratingArray = ratingsData.map(entry => entry.rating);
+
+    const userTensor = tf.tensor1d(userArray, 'int32');
+    const productTensor = tf.tensor1d(productArray, 'int32');
+    const ratingTensor = tf.tensor1d(ratingArray);
+
+    const embeddingSize = 10;
+    const userEmbeddingLayer = tf.layers.embedding({
+      inputDim: uniqueUserIds.length,
+      outputDim: embeddingSize,
+      // inputLength: 1
+    });
+    const productEmbeddingLayer = tf.layers.embedding({
+      inputDim: uniqueProductIds.length,
+      outputDim: embeddingSize,
+      // inputLength: 1
+    });
+    const userOutputShape = (userEmbeddingLayer as any).apply(tf.zeros([1, 1])).shape;
+    const productOutputShape = (productEmbeddingLayer as any).apply(tf.zeros([1, 1])).shape;
+    
+    console.log('User Embedding Output Shape:', userOutputShape);
+    console.log('Product Embedding Output Shape:', productOutputShape);
+    const dotLayer = tf.layers.dot({ axes: [1, 1] });
+    const flattenLayer = tf.layers.flatten();
+    const denseLayer = tf.layers.dense({ units: 1, activation: 'relu' });
+
+    const model = tf.sequential();
+    model.add(userEmbeddingLayer);
+    model.add(productEmbeddingLayer);
+    model.add(dotLayer);
+    model.add(flattenLayer);
+    model.add(denseLayer);
+
+    model.compile({
+      optimizer: 'adam',
+      loss: 'meanSquaredError',
+      metrics: ['mse']
+    });
+
+    const epochs = 10;
+    model.fit([userTensor, productTensor], ratingTensor, { epochs });
+
+    const userIdToPredict: any = "c4bc9b40-6054-4b51-93c9-2749c5dfd2ef";
+    const productsToPredict = uniqueProductIds.filter(productId => {
+      return !ratingsData.some(entry => entry.user.id === userIdToPredict && entry.products.id === productId);
+    });
+    const userTensorToPredict = tf.tensor1d(Array(productsToPredict.length).fill(userIdToPredict - 1), 'int32');
+    const productTensorToPredict = tf.tensor1d(productsToPredict.map(productId => productIdToIndex.get(productId)), 'int32');
+    const predictions: any = model.predict([userTensorToPredict, productTensorToPredict]);
+
+
+    predictions.data().then(predictionsArray => {
+      const recommendations = productsToPredict.map((productId, index) => ({
+        productId: productId,
+        predictedRating: predictionsArray[index][0]
+      }));
+
+      // Sort the recommendations by predicted rating in descending order
+      recommendations.sort((a, b) => b.predictedRating - a.predictedRating);
+
+      // Print or use the recommendations as needed
+      console.log(recommendations);
+    });
+  }
+
+  async recommender(dataFromPython, user) {
     return new Promise(async (resolve, reject) => {
       try {
         const recommendedProducts = [];
@@ -53,20 +136,20 @@ export class ProductsService {
         reject(error);
       }
     });
-    
+
   }
 
-  async showRating(id){
-    const review  = await this.reviewModel.createQueryBuilder('review')
-    .leftJoinAndSelect('review.user','user')
-    .leftJoinAndSelect('review.products','product')
-    .where('product.id =:id',{id})
-    .select([
-      'review',
-      'user'
-    ])
-    .getMany()
-    return {review, count:review.length}
+  async showRating(id) {
+    const review = await this.reviewModel.createQueryBuilder('review')
+      .leftJoinAndSelect('review.user', 'user')
+      .leftJoinAndSelect('review.products', 'product')
+      .where('product.id =:id', { id })
+      .select([
+        'review',
+        'user'
+      ])
+      .getMany()
+    return { review, count: review.length }
   }
 
   async findTopRated() {
@@ -208,13 +291,13 @@ export class ProductsService {
   async update(id: string, attrs, image: Express.Multer.File, attachment: Express.Multer.File[]) {
     const { name, price, description, category, countInStock, trademark, urls, promotion } = attrs;
     const product = await this.productModel.findOneBy({ id });
-  
+
     if (!product) throw new NotFoundException('No product with given ID.');
-  
+
     const category1 = await this.categoryModel.findOneBy({ id: category });
     const trademark1 = await this.tradeMarkModel.findOneBy({ id: trademark });
     const promotion1 = await this.promotionModel.findOneBy({ id: promotion });
-  
+
     if (attachment && attachment.length > 0) {
       await Promise.all(attachment.map(async attachments => {
         if (attachments.mimetype.match('image')) {
@@ -224,19 +307,19 @@ export class ProductsService {
         }
       }));
     }
-  
+
     if (image) {
       if (image[0]?.mimetype.match('image')) {
         await this.attachmentsService.update(id, urls);
         await this.cloudinaryService.deleteFile(product.image);
         const fileName = await this.cloudinaryService.uploadFile(image[0]);
-  
+
         product.image = fileName;
       } else {
         throw new Error('Please provide a valid image');
       }
     }
-  
+
     product.name = name;
     product.price = price;
     product.description = description;
@@ -244,19 +327,19 @@ export class ProductsService {
     product.category = category1;
     product.countInStock = countInStock;
     product.promotion = promotion1;
-  
+
     const updatedProduct = await this.productModel.save(product);
     const result = await this.productModel.findOne({
-      where:{
-        id:updatedProduct.id
+      where: {
+        id: updatedProduct.id
       },
-      relations:{
+      relations: {
         attachments: true,
       }
     })
     return result;
   }
-  
+
   async createReview(
     idProduct: string,
     user,

@@ -13,15 +13,15 @@ export class AuthService {
 
   async verifyGoogleToken(code: string) {
     const client = new OAuth2Client({
-      clientId: process.env.CLIENT_ID,
-      clientSecret: process.env.CLIENT_SECRET,
+      clientId: "768841587784-rdupa4jrh74ocmn8m9ghn9ct88etjv62.apps.googleusercontent.com",
+      clientSecret: "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",
       redirectUri: 'http://localhost:8080'
     })
-    try {
+    // try {
       const { tokens } = await client.getToken(code);
       const ticket = await client.verifyIdToken({
         idToken: tokens.id_token,
-        audience: process.env.GOOGLE_CLIENT_ID,
+        audience: "768841587784-rdupa4jrh74ocmn8m9ghn9ct88etjv62.apps.googleusercontent.com",
       });
       const payload = ticket.getPayload();
       const insertData = new UserEntity()
@@ -33,17 +33,16 @@ export class AuthService {
       const user = await this.userService.createUser(insertData);
       const data = { ...payload, userRole: user.role, id: user.id };
       const token = await this.createJWT(data);
-      console.log('token', token)
       return {
         access_token: token,
         data
       };
-    } catch (error) {
-      throw new HttpException(
-        'Google authentication failed.',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+    // } catch (error) {
+    //   throw new HttpException(
+    //     'Google authentication failed.',
+    //     HttpStatus.INTERNAL_SERVER_ERROR,
+    //   );
+    // }
   }
 
   createJWT(payload) {
