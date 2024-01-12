@@ -45,13 +45,13 @@ export class PaymentService {
     const accessKey = "F8BBA842ECF85";
     const secretkey = "K951B6PE1waDMi640xX08PD3vg6EkVlz";
     const requestId = partnerCode + new Date().getTime();
-    const orderId = `${order.id}`;
-    const orderInfo = `Payment for #${order.id}`;
+    const orderId = `${order.id}-H`;
+    const orderInfo = `Payment for #${order.id}-H`;
     const redirectUrl = "https://momo.vn/return";
     const ipnUrl = "https://callback.url/notify";
     // const ipnUrl = redirectUrl = "https://webhook.site/454e7b77-f177-4ece-8236-ddf1c26ba7f8";
     const amount = order.totalPrice;
-    const requestType = "captureWallet"
+    const requestType = "payWithATM"
     const extraData = ""; //pass empty value if your merchant does not have stores
 
     const rawSignature = "accessKey=" + accessKey + "&amount=" + amount + "&extraData=" + extraData + "&ipnUrl=" + ipnUrl + "&orderId=" + orderId + "&orderInfo=" + orderInfo + "&partnerCode=" + partnerCode + "&redirectUrl=" + redirectUrl + "&requestId=" + requestId + "&requestType=" + requestType
@@ -113,6 +113,10 @@ export class PaymentService {
     });
     return payUrl;
   }
+
+
+
+
 
   async payment(req, order) {
     process.env.TZ = 'Asia/Ho_Chi_Minh';

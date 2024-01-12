@@ -10,5 +10,6 @@ import CartEntity from './cart.entity';
   ],
   providers: [CartService],
   controllers: [CartController],
+  exports: [CartService]
 })
 export class CartModule {}

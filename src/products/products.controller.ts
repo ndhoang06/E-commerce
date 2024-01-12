@@ -81,7 +81,6 @@ export class ProductsController {
     const data = {
       idproduct: req.body.idproduct,
     };
-    console.log("dataa",data)
     const requestOptions = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

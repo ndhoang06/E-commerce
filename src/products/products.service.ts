@@ -55,7 +55,8 @@ export class ProductsService {
 
   async recommend1(dataFromPython) {
     const productIds = dataFromPython.map(item => item.productId)
-    const products = await this.productModel.createQueryBuilder('products')
+    if(productIds.length > 0){
+      const products = await this.productModel.createQueryBuilder('products')
       .where('products.id IN (:...productIds)', { productIds })
       .leftJoinAndSelect('products.trademark', 'trademark')
       .leftJoinAndSelect('products.category', 'category')
@@ -63,8 +64,12 @@ export class ProductsService {
       .leftJoinAndSelect('products.attachments', 'attachments')
       .leftJoinAndSelect('products.promotion', 'promotion')
       .getMany()
-    const result = products.map(product => plainToClass(ProductShow, product));
-    return result;
+      const result = products.map(product => plainToClass(ProductShow, product));
+      return result;
+    }else {
+      return []
+    }
+    
   }
 
   async recommender(dataFromPython, user) {

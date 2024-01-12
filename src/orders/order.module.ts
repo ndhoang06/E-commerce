@@ -8,11 +8,13 @@ import UserEntity from 'src/users/user.entity';
 import ProductEntity from 'src/products/product.entity';
 import { PaymentService } from 'src/payment/payment.service';
 import { PublicModule } from 'src/public/public.module';
+import { CartModule } from 'src/cart/cart.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([OrderEntity, UserEntity, ProductEntity]),
-    PublicModule
+    PublicModule,
+    CartModule
   ],
   controllers: [OrdersController],
   providers: [OrdersService, PaymentService],

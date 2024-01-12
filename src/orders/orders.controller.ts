@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Req,
+  Session,
   UseGuards,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
@@ -24,9 +25,9 @@ export class OrdersController {
 
   @UseGuards(AuthGuard)
   @Post()
-  async createOrder(@Body() body: OrderDTO, @Req() req) {
+  async createOrder(@Body() body: OrderDTO, @Req() req, @Session() session: any) {
     const user = req.user
-    return this.ordersService.create(body, user.id);
+    return this.ordersService.create(body, user.id, session);
   }
 
   // @UseGuards(AuthGuard)

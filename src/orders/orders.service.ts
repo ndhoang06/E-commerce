@@ -14,7 +14,8 @@ import ProductEntity from 'src/products/product.entity';
 import { PaymentService } from 'src/payment/payment.service';
 import { PublicService } from 'src/public/public.service';
 import { ContentEmail } from 'src/public/public.dto';
-
+import { Cart, defaultCart } from 'src/cart/cart.schema';
+import { CartService } from 'src/cart/cart.service';
 @Injectable()
 export class OrdersService {
   constructor(
@@ -25,12 +26,15 @@ export class OrdersService {
     @InjectRepository(ProductEntity)
     private readonly productModel: Repository<ProductEntity>,
     private readonly paymentService: PaymentService,
-    private readonly publicService: PublicService
+    private readonly publicService: PublicService,
+    private cartService: CartService
   ) { }
+  cart = new Cart().cart;
 
   async create(
     orderAttrs,
-    userId: string
+    userId: string,
+    session
   ) {
     const {
       orderItems,
@@ -73,7 +77,10 @@ export class OrdersService {
     contentEmail.content = `
         Bạn vừa đặt hàng thành công với #${createdOrder.id} <br>
         `;
-    contentEmail.to = [createdOrder.user.email]
+    contentEmail.to = [createdOrder.user.email];
+    this.cartService.cart = session.cart ? session.cart : defaultCart;
+    const cartItems = this.cartService.removeCart();
+    session.cart.cartItems = cartItems;
     await this.publicService.sendEmail(contentEmail)
     return createdOrder;
   }
