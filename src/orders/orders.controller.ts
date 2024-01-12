@@ -74,11 +74,14 @@ export class OrdersController {
     return this.ordersService.updateDelivered(id);
   }
 
-  @UseGuards(AuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @UseGuards(AuthGuard, 
+    // RolesGuard
+    )
+  // @Roles(UserRole.ADMIN)
   @Put(':id/status')
   updateStatus(@Param('id') id: number, @Req() req) {
-    return this.ordersService.updateStatus(id, req.body.status)
+    const user = req.user
+    return this.ordersService.updateStatus(id, req.body.status, user)
   }
 
   @Delete(':id')

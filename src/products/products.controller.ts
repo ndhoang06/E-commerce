@@ -23,31 +23,81 @@ import { ProductDto, optionsProduct } from './product.dto';
 import { ReviewDto } from './review.dto';
 import { ApiTags } from '@nestjs/swagger';
 import axios from 'axios';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Review } from './product.entity';
 @Controller('products')
 @ApiTags('Products')
 export class ProductsController {
-  constructor(private productsService: ProductsService) { }
+  constructor(private productsService: ProductsService,
+    @InjectRepository(Review)
+    private readonly reviewModel: Repository<Review>,) { }
 
-  @Get('test-recommend')
-  testRecommend(@Req() req) {
-    const user = req.user
-    return this.productsService.recommenderTest();
+
+  @Get('test-csv')
+  async testCSV() {
+    
+
+    return { message: 'CSV file exported successfully' };
   }
 
   @UseInterceptors(ClassSerializerInterceptor)
-  @UseGuards(AuthGuard)
-  @Get('recommender')
+  // @UseGuards(AuthGuard)
+  @Post('recommender')
   async recommender(@Req() req) {
+    const model = await this.reviewModel.query(
+      `
+      SELECT
+        r.id,
+        r.rating ,
+        r."comment" ,
+        u.id as user,
+        pe.id as product,
+        ce.id as category
+      FROM
+        public.review as r
+      LEFT JOIN
+        public.user_entity u ON r."userId" = u.id 
+      LEFT JOIN
+        public.product_entity pe ON r."productsId" = pe.id
+      LEFT JOIN
+        public.category_entity ce ON pe."categoryId" = ce.id;
+      `
+    )
+
+    const header = [
+      { id: 'id', title: 'id' },
+      { id: 'user', title: 'userId' },
+      { id: 'rating', title: 'rating' },
+      { id: 'comment', title: 'comment' },
+      { id: 'product', title: 'productId' },
+      { id: 'category', title: 'category' }
+    ];
+
+    const outputPath = 'F:\\DATN\\pythonProject\\import.csv';
+    await this.productsService.exportToCsv(model, outputPath, header);
+
     const pythonUrl = "http://127.0.0.1:5000/hello";
-    const response = await axios.get(pythonUrl);
-    const dataFromPython = response.data;
-    const user = req.user.id;
-    return await this.productsService.recommender(dataFromPython, user)
+    const data = {
+      idproduct: req.body.idproduct,
+    };
+    console.log("dataa",data)
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    };
+    
+    const response = await fetch(pythonUrl, requestOptions);
+    const dataFromPython = await response.json()
+    return await this.productsService.recommend1(dataFromPython)
+    // const user = req.user.id;
+    // return await this.productsService.recommender(dataFromPython, user)
   }
 
 
   @Get(':id/review')
-  async showRating(@Param('id') id: string){
+  async showRating(@Param('id') id: string) {
     return await this.productsService.showRating(id)
   }
 

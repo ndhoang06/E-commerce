@@ -17,6 +17,9 @@ import CategoryEntity from 'src/categories/categories.entity';
 import { Promotion } from 'src/promotion/entities/promotion.entity';
 import TrademarkEntity from 'src/trademark/trademark.entity';
 import * as tf from '@tensorflow/tfjs';
+import { createObjectCsvWriter } from 'csv-writer';
+import { OrderEntity } from 'src/orders/order.entity';
+import { OrdersService } from 'src/orders/orders.service';
 
 
 @Injectable()
@@ -36,87 +39,32 @@ export class ProductsService {
     private readonly tradeMarkModel: Repository<TrademarkEntity>,
     @InjectRepository(Promotion)
     private readonly promotionModel: Repository<Promotion>,
+    @InjectRepository(OrderEntity)
+    private readonly orderModel: Repository<OrderEntity>,
+    private readonly orderService: OrdersService,
   ) { }
 
-  async recommenderTest() {
-    const ratingsData = await this.reviewModel.find({
-      relations: {
-        user: true,
-        products: true
-      }
-    })
-    const uniqueUserIds = [...new Set(ratingsData.map(entry => entry.user.id))];
-    const uniqueProductIds = [...new Set(ratingsData.map(entry => entry.products.id))];
-
-    // Create a mapping from userId and productId to an index
-    const userIdToIndex = new Map(uniqueUserIds.map((id, index) => [id, index]));
-    const productIdToIndex = new Map(uniqueProductIds.map((id, index) => [id, index]));
-
-    const userArray = ratingsData.map(entry => userIdToIndex.get(entry.user.id));
-    const productArray = ratingsData.map(entry => productIdToIndex.get(entry.products.id));
-    const ratingArray = ratingsData.map(entry => entry.rating);
-
-    const userTensor = tf.tensor1d(userArray, 'int32');
-    const productTensor = tf.tensor1d(productArray, 'int32');
-    const ratingTensor = tf.tensor1d(ratingArray);
-
-    const embeddingSize = 10;
-    const userEmbeddingLayer = tf.layers.embedding({
-      inputDim: uniqueUserIds.length,
-      outputDim: embeddingSize,
-      // inputLength: 1
-    });
-    const productEmbeddingLayer = tf.layers.embedding({
-      inputDim: uniqueProductIds.length,
-      outputDim: embeddingSize,
-      // inputLength: 1
-    });
-    const userOutputShape = (userEmbeddingLayer as any).apply(tf.zeros([1, 1])).shape;
-    const productOutputShape = (productEmbeddingLayer as any).apply(tf.zeros([1, 1])).shape;
-    
-    console.log('User Embedding Output Shape:', userOutputShape);
-    console.log('Product Embedding Output Shape:', productOutputShape);
-    const dotLayer = tf.layers.dot({ axes: [1, 1] });
-    const flattenLayer = tf.layers.flatten();
-    const denseLayer = tf.layers.dense({ units: 1, activation: 'relu' });
-
-    const model = tf.sequential();
-    model.add(userEmbeddingLayer);
-    model.add(productEmbeddingLayer);
-    model.add(dotLayer);
-    model.add(flattenLayer);
-    model.add(denseLayer);
-
-    model.compile({
-      optimizer: 'adam',
-      loss: 'meanSquaredError',
-      metrics: ['mse']
+  async exportToCsv(data: any[], outputPath: string, header: any[]) {
+    const csvWriter = createObjectCsvWriter({
+      path: outputPath,
+      header,
     });
 
-    const epochs = 10;
-    model.fit([userTensor, productTensor], ratingTensor, { epochs });
+    return csvWriter.writeRecords(data);
+  }
 
-    const userIdToPredict: any = "c4bc9b40-6054-4b51-93c9-2749c5dfd2ef";
-    const productsToPredict = uniqueProductIds.filter(productId => {
-      return !ratingsData.some(entry => entry.user.id === userIdToPredict && entry.products.id === productId);
-    });
-    const userTensorToPredict = tf.tensor1d(Array(productsToPredict.length).fill(userIdToPredict - 1), 'int32');
-    const productTensorToPredict = tf.tensor1d(productsToPredict.map(productId => productIdToIndex.get(productId)), 'int32');
-    const predictions: any = model.predict([userTensorToPredict, productTensorToPredict]);
-
-
-    predictions.data().then(predictionsArray => {
-      const recommendations = productsToPredict.map((productId, index) => ({
-        productId: productId,
-        predictedRating: predictionsArray[index][0]
-      }));
-
-      // Sort the recommendations by predicted rating in descending order
-      recommendations.sort((a, b) => b.predictedRating - a.predictedRating);
-
-      // Print or use the recommendations as needed
-      console.log(recommendations);
-    });
+  async recommend1(dataFromPython) {
+    const productIds = dataFromPython.map(item => item.productId)
+    const products = await this.productModel.createQueryBuilder('products')
+      .where('products.id IN (:...productIds)', { productIds })
+      .leftJoinAndSelect('products.trademark', 'trademark')
+      .leftJoinAndSelect('products.category', 'category')
+      .leftJoinAndSelect('products.reviews', 'reviews')
+      .leftJoinAndSelect('products.attachments', 'attachments')
+      .leftJoinAndSelect('products.promotion', 'promotion')
+      .getMany()
+    const result = products.map(product => plainToClass(ProductShow, product));
+    return result;
   }
 
   async recommender(dataFromPython, user) {
@@ -340,12 +288,45 @@ export class ProductsService {
     return result;
   }
 
+  async checkReview(idProduct, user) {
+    const checkUser = await this.userModel.findOneBy({ id: user.id });
+    const myOrder = await this.orderService.findUserOrders(user.id)
+    const allOrderItems = myOrder.flatMap(order => {
+      return order.orderItems.map(item => {
+        return item;
+      });
+    });
+    const checkOrder = allOrderItems.map(item => item.productId.id)
+    const check = checkOrder.find(item => item == idProduct)
+    if (check === undefined) {
+      return {
+        check: false,
+        message: "Bạn chưa mua hàng nên không thể đánh giá"
+      }
+    }
+    const checkReview = await this.reviewModel.find({
+      relations: {
+        user: true,
+        products: true
+      }
+    })
+    const check2 = checkReview.find(item =>
+      item.user.id === checkUser.id &&
+      item.products.id === idProduct)
+    if (check2 !== undefined) {
+      return {
+        check: false,
+        message: "Bạn đã đánh giá rồi"
+      }
+    }
+    return true
+  }
+
   async createReview(
     idProduct: string,
     user,
     body
   ) {
-
     const product = await this.productModel.createQueryBuilder('product')
       .where('product.id=:idProduct', { idProduct })
       .leftJoinAndSelect('product.reviews', 'review')
@@ -354,23 +335,35 @@ export class ProductsService {
 
     const checkUser = await this.userModel.findOneBy({ id: user.id });
 
-    const review = new Review()
-    review.user = checkUser;
-    review.comment = body.comment;
-    review.products = product;
-    review.rating = body.rating;
-    await this.reviewModel.save(review)
+    const myOrder = await this.orderService.findUserOrders(user.id)
+    const allOrderItems = myOrder.flatMap(order => {
+      return order.orderItems.map(item => {
+        return item;
+      });
+    });
+    const check: any = await this.checkReview(idProduct, user);
 
-    const newProduct = await this.productModel.createQueryBuilder('product')
-      .where('product.id=:idProduct', { idProduct })
-      .leftJoinAndSelect('product.reviews', 'review')
-      .getOne()
-    newProduct.rating =
-      newProduct.reviews.reduce((acc, item) => item.rating + acc, 0) /
-      newProduct.reviews.length;
-    newProduct.numReviews = newProduct.reviews.length
-    const result = await this.productModel.save(newProduct)
-    return result
+    if (check.check === false) {
+      return { message: check.message }
+    } else {
+      const review = new Review()
+      review.user = checkUser;
+      review.comment = body.comment;
+      review.products = product;
+      review.rating = body.rating;
+      await this.reviewModel.save(review)
+
+      const newProduct = await this.productModel.createQueryBuilder('product')
+        .where('product.id=:idProduct', { idProduct })
+        .leftJoinAndSelect('product.reviews', 'review')
+        .getOne()
+      newProduct.rating =
+        newProduct.reviews.reduce((acc, item) => item.rating + acc, 0) /
+        newProduct.reviews.length;
+      newProduct.numReviews = newProduct.reviews.length
+      const result = await this.productModel.save(newProduct)
+      return result
+    }
   }
 
   async deleteMany(idProduct) {

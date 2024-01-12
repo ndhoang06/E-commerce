@@ -9,10 +9,14 @@ import { AttachmentsModule } from 'src/attachments/attachments.module';
 import CategoryEntity from 'src/categories/categories.entity';
 import TrademarkEntity from 'src/trademark/trademark.entity';
 import { Promotion } from 'src/promotion/entities/promotion.entity';
+import { OrderEntity } from 'src/orders/order.entity';
+import { OrderModule } from 'src/orders/order.module';
 @Module({
   imports: [
     AttachmentsModule,
-    TypeOrmModule.forFeature([ProductEntity, Review, UserEntity,CategoryEntity,Promotion,TrademarkEntity]),
+    TypeOrmModule.forFeature([ProductEntity, Review, UserEntity,
+      CategoryEntity,Promotion,TrademarkEntity, OrderEntity]),
+      OrderModule
     // MongooseModule.forFeature([
     //   {
     //     name: Product.name,

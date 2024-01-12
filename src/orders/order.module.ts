@@ -16,5 +16,6 @@ import { PublicModule } from 'src/public/public.module';
   ],
   controllers: [OrdersController],
   providers: [OrdersService, PaymentService],
+  exports:[OrdersService]
 })
 export class OrderModule { }

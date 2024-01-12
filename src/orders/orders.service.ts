@@ -9,7 +9,7 @@ import { PaymentResult } from 'src/interfaces';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { OrderEntity, Status } from './order.entity';
-import UserEntity from 'src/users/user.entity';
+import UserEntity, { UserRole } from 'src/users/user.entity';
 import ProductEntity from 'src/products/product.entity';
 import { PaymentService } from 'src/payment/payment.service';
 import { PublicService } from 'src/public/public.service';
@@ -249,7 +249,7 @@ export class OrdersService {
       .execute()
   }
 
-  async updateStatus(id, status: Status) {
+  async updateStatus(id, status: Status, user) {
     const checkOrder = await this.orderModel.findOne({
       where: { id }
     })
@@ -277,9 +277,15 @@ export class OrdersService {
         throw new HttpException("cannot change status", HttpStatus.BAD_REQUEST)
       }
     } else if (status === Status.CANCEL) {
+      
       if (checkOrder.status === Status.DONE) {
         throw new HttpException("cannot change status", HttpStatus.BAD_REQUEST)
       } else {
+        if(user.role === UserRole.USER){
+          if(checkOrder.status !== Status.PENDING && checkOrder.status !== Status.PROCESSING){
+            throw new HttpException("cannot change status", HttpStatus.BAD_REQUEST)
+          }
+        }
         for (const item of checkOrder.orderItems) {
           const product = await this.productModel.findOne({
             where: {
